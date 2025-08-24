@@ -1,70 +1,78 @@
-# Getting Started with Create React App
+# 📌 Lead Management Website
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A **Lead Management Website** designed to help businesses efficiently **capture, track, and manage customer leads**.  
+This project provides an intuitive dashboard, seamless lead organization, and integrated analytics to streamline sales processes.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 🚀 Features
 
-### `npm start`
+- **Lead Creation & Tracking** – Easily add, view, update, and manage leads.
+- **Smart Search & Filtering** – Quickly find specific leads using powerful search and filters.
+- **Dashboard Overview** – Visualize lead statuses, conversion rates, and activity history.
+- **Role-Based Authentication** – Secure login for admins, managers, and agents.
+- **Responsive Design** – Optimized for desktop, tablet, and mobile devices.
+- **Real-Time Updates** *(if applicable)* – Instant synchronization of lead data.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 🛠️ Tech Stack
 
-### `npm test`
+**Frontend:**  
+- HTML5, CSS3, JavaScript *(or React / Angular / Vue if applicable)*  
+- Bootstrap / Tailwind CSS *(if used)*  
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+**Backend:**  
+- Node.js / Express *(or Django / Flask / Laravel depending on your stack)*  
 
-### `npm run build`
+**Database:**  
+- MySQL / MongoDB / PostgreSQL *(choose the one you used)*  
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+**Version Control:**  
+- Git & GitHub  
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+---
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 📂 Project Structure
 
-### `npm run eject`
+> A **modern Lead Management Website** to capture, organize, and track customer leads efficiently with an intuitive dashboard, role-based authentication, and analytics.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+---
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## 🚀 Features
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+✅ Add, update, delete, and manage leads  
+✅ Dashboard with visual insights & lead statistics  
+✅ Role-based authentication (Admin, Manager, Agent)  
+✅ Smart search and filtering for quick lead tracking  
+✅ Fully responsive UI (mobile-friendly)  
+✅ Real-time data synchronization *(if applicable)*  
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+---
 
-## Learn More
+## 🛠️ Tech Stack
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+| **Technology** | **Purpose** |
+|---------------|------------|
+**Frontend** | HTML, CSS, JavaScript *(React / Angular / Vue optional)*  
+**Styling** | Bootstrap / Tailwind CSS  
+**Backend** | Node.js, Express *(or Django / Flask if applicable)*  
+**Database** | MongoDB / MySQL / PostgreSQL  
+**Version Control** | Git & GitHub  
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+---
 
-### Code Splitting
+## 📂 Project Structure
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+```bash
+lead-management-website/
+│── public/             # Static assets (images, icons, etc.)
+│── src/                # Source code
+│   ├── components/     # Reusable components
+│   ├── pages/          # Dashboard, Leads, Login, etc.
+│   ├── services/       # API calls & business logic
+│── config/             # Environment & database configs
+│── models/             # Database schemas/models
+│── routes/             # API endpoints
+│── package.json        # Dependencies & scripts
+│── README.md           # Project documentation
