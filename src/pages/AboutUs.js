@@ -71,7 +71,7 @@ export const AboutUs = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-slate-500 text-white text-center py-4 ">
+      <footer className="bg-slate-500 text-white text-center py-4 h-fit">
 <div className='flex justify-evenly'>
 <a href="https://www.linkedin.com/in/ayush-mishra-1a0793303/" target='blank'><img src="/Linkdin.jpg" className='h-[40px] w-[40px] rounded-full'></img></a>
 <div>
