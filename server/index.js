@@ -16,12 +16,29 @@ database.connect();
 //middlewares
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({
-    origin: 'https://lead-management-zeta.vercel.app',
+const allowedOrigins = [
+  "http://localhost:3000", // Local development
+  "https://lead-management-zeta.vercel.app", // Deployed frontend
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (e.g. Postman, mobile apps)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("CORS not allowed for this origin"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
-    
- 
-}));
+  })
+);
+
+// ✅ Allow preflight requests for all routes
+app.options("*", cors());
 app.use(fileUpload({
     useTempFiles: true,
     tempFileDir: '/tmp/',
