@@ -7,7 +7,7 @@ if (!BASE_URL) {
 }
 // If the BASE_URL is not set, you can set a default value here
 if (!BASE_URL) {
-  BASE_URL = "https://lead-management-dumg.onrender.com/api/v1"; // Default value
+  BASE_URL = "https://lead-management-dumg.onrender.com//api/v1"; // Default value
 }
 // AUTH ENDPOINTS
 export const endpoints = {
@@ -19,6 +19,7 @@ export const endpoints = {
   VERIFYOTP_API: BASE_URL + "/auth/verify-otp",
   VERIFYEMAIL_API: BASE_URL + "/auth/verify-email",
 }
+
 
 // PROFILE ENDPOINTS
 export const profileEndpoints = {

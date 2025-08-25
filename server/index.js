@@ -17,8 +17,9 @@ database.connect();
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-    origin: 'https://lead-management-puce-mu.vercel.app/',
+    origin: '*',
     credentials: true,
+    
  
 }));
 app.use(fileUpload({

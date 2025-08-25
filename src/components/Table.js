@@ -95,7 +95,7 @@ export const Table = () => {
     if (!validateLead(newLead)) return;
 
     try {
-      await axios.post("http://localhost:4000/api/v1/leads", newLead);
+      await axios.post("https://lead-management-dumg.onrender.com//api/v1/leads", newLead);
       alert("Lead added successfully!");
       fetchLeads();
       setNewLead({
