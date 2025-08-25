@@ -1,6 +1,10 @@
 .App {
  
 }
+.navbar {
+  position: relative;
+  z-index: 50;
+}
 
 .App-logo {
   height: 40vmin;

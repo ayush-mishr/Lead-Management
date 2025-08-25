@@ -6,6 +6,7 @@ import { useSelector } from 'react-redux';
 import { useDispatch } from 'react-redux';
 import { setToken } from '../slices/auth';
 import {setSignupData} from "../slices/auth"
+import "../App.css"
 
 
 export const Navbar = () => {
@@ -23,7 +24,7 @@ const{signupData}=useSelector((state)=>state.auth);
   console.log(token);
  }
   return (
-    <div className='flex h-[50px] justify-around items-center border-b-2 border-gray-600 bg-slate-700 '>
+    <div className='navbar flex h-[50px] justify-around items-center border-b-2 border-gray-600 bg-slate-700 '>
        
        <div className='flex justify-center items-center '>
          <Link to="/"><img src="Ld.png" alt="logo" className='w-[50px] h-[50px]  rounded-full  -translate-x-[30px] '></img></Link>
