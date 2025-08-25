@@ -23,25 +23,132 @@ export const Table = () => {
     status: "new",
     score: 0,
     lead_value: 0,
+    is_qualified: false,
   });
 
   const [columnDefs] = useState([
     { headerName: "First Name", field: "first_name", editable: true },
     { headerName: "Last Name", field: "last_name", editable: true },
-    { headerName: "Email", field: "email", editable: true },
+    {
+      headerName: "Email",
+      field: "email",
+      editable: true,
+      filter: "agTextColumnFilter",
+      filterParams: { filterOptions: ["contains", "equals"], debounceMs: 200 },
+    },
     { headerName: "Phone", field: "phone", editable: true },
-    { headerName: "Company", field: "company", editable: true },
-    { headerName: "City", field: "city", editable: true },
+    {
+      headerName: "Company",
+      field: "company",
+      editable: true,
+      filter: "agTextColumnFilter",
+      filterParams: { filterOptions: ["contains", "equals"], debounceMs: 200 },
+    },
+    {
+      headerName: "City",
+      field: "city",
+      editable: true,
+      filter: "agTextColumnFilter",
+      filterParams: { filterOptions: ["contains", "equals"], debounceMs: 200 },
+    },
     { headerName: "State", field: "state", editable: true },
-    { headerName: "Source", field: "source", editable: true },
-    { headerName: "Status", field: "status", editable: true },
-    { headerName: "Score", field: "score", editable: true },
-    { headerName: "Lead Value", field: "lead_value", editable: true },
+    {
+      headerName: "Source",
+      field: "source",
+      editable: true,
+      filter: "agSetColumnFilter",
+      filterParams: {
+        values: ["website", "facebook_ads", "google_ads", "referral", "events", "other"],
+      },
+    },
+    {
+      headerName: "Status",
+      field: "status",
+      editable: true,
+      filter: "agSetColumnFilter",
+      filterParams: {
+        values: ["new", "contacted", "qualified", "lost", "won"],
+      },
+    },
+    {
+      headerName: "Score",
+      field: "score",
+      editable: true,
+      filter: "agNumberColumnFilter",
+      filterParams: {
+        filterOptions: ["equals", "greaterThan", "lessThan", "inRange"],
+      },
+    },
+    {
+      headerName: "Lead Value",
+      field: "lead_value",
+      editable: true,
+      filter: "agNumberColumnFilter",
+      filterParams: {
+        filterOptions: ["equals", "greaterThan", "lessThan", "inRange"],
+      },
+    },
+    {
+      headerName: "Last Activity",
+      field: "last_activity",
+      editable: false,
+      filter: "agDateColumnFilter",
+      filterParams: {
+        comparator: (filterLocalDateAtMidnight, cellValue) => {
+          const cellDate = cellValue ? new Date(cellValue) : null;
+          if (!cellDate) return 0;
+          if (cellDate < filterLocalDateAtMidnight) return -1;
+          if (cellDate > filterLocalDateAtMidnight) return 1;
+          return 0;
+        },
+        browserDatePicker: true,
+      },
+    },
+    {
+      headerName: "Created At",
+      field: "created_at",
+      editable: false,
+      filter: "agDateColumnFilter",
+      filterParams: {
+        comparator: (filterLocalDateAtMidnight, cellValue) => {
+          const cellDate = cellValue ? new Date(cellValue) : null;
+          if (!cellDate) return 0;
+          if (cellDate < filterLocalDateAtMidnight) return -1;
+          if (cellDate > filterLocalDateAtMidnight) return 1;
+          return 0;
+        },
+        browserDatePicker: true,
+      },
+    },
+    {
+      headerName: "Updated At",
+      field: "updated_at",
+      editable: false,
+      filter: "agDateColumnFilter",
+      filterParams: {
+        comparator: (filterLocalDateAtMidnight, cellValue) => {
+          const cellDate = cellValue ? new Date(cellValue) : null;
+          if (!cellDate) return 0;
+          if (cellDate < filterLocalDateAtMidnight) return -1;
+          if (cellDate > filterLocalDateAtMidnight) return 1;
+          return 0;
+        },
+        browserDatePicker: true,
+      },
+    },
+    {
+      headerName: "Is Qualified",
+      field: "is_qualified",
+      editable: true,
+      filter: "agSetColumnFilter",
+      filterParams: {
+        values: [true, false],
+      },
+    },
   ]);
 
   const defaultColDef = {
     sortable: true,
-    filter: true,
     resizable: true,
     floatingFilter: true,
     checkboxSelection: true,
@@ -67,18 +174,15 @@ export const Table = () => {
       alert("First name, last name, and email are required.");
       return false;
     }
-
     if (lead.score < 0 || lead.score > 100) {
       alert("Score must be between 0 and 100.");
       return false;
     }
-
     if (lead.lead_value < 0) {
       alert("Lead value cannot be negative.");
       return false;
     }
 
-    // Check email uniqueness for new lead or updated email
     const duplicate = rowData.find(
       (r) => r.email === lead.email && (isNew || r._id !== lead._id)
     );
@@ -110,6 +214,7 @@ export const Table = () => {
         status: "new",
         score: 0,
         lead_value: 0,
+        is_qualified: false,
       });
     } catch (err) {
       console.error("Error creating lead:", err);
@@ -123,7 +228,6 @@ export const Table = () => {
       alert("Please select a lead to update!");
       return;
     }
-
     if (!validateLead(selectedLead, false)) return;
 
     try {
@@ -145,7 +249,6 @@ export const Table = () => {
       alert("Please select a lead to delete!");
       return;
     }
-
     if (!window.confirm("Are you sure you want to delete this lead?")) return;
 
     try {
