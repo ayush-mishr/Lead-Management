@@ -157,7 +157,7 @@ export const Table = () => {
   // Fetch all leads
   const fetchLeads = async () => {
     try {
-      const res = await axios.get("http://localhost:4000/api/v1/leads");
+      const res = await axios.get("https://lead-management-2-wnen.onrender.com/api/v1/leads");
       setRowData(res.data.data);
     } catch (err) {
       console.error("Error fetching leads:", err);
@@ -199,7 +199,7 @@ export const Table = () => {
     if (!validateLead(newLead)) return;
 
     try {
-      await axios.post("http://localhost:4000/api/v1/leads", newLead);
+      await axios.post("https://lead-management-2-wnen.onrender.com/api/v1/leads", newLead);
       alert("Lead added successfully!");
       fetchLeads();
       setNewLead({
@@ -232,7 +232,7 @@ export const Table = () => {
 
     try {
       await axios.put(
-        `http://localhost:4000/api/v1/leads/${selectedLead._id}`,
+        `https://lead-management-2-wnen.onrender.com/api/v1/leads/${selectedLead._id}`,
         selectedLead
       );
       alert("Lead updated successfully!");
@@ -253,7 +253,7 @@ export const Table = () => {
 
     try {
       await axios.delete(
-        `http://localhost:4000/api/v1/leads/${selectedLead._id}`
+        `https://lead-management-2-wnen.onrender.com/api/v1/leads/${selectedLead._id}`
       );
       alert("Lead deleted successfully!");
       fetchLeads();
