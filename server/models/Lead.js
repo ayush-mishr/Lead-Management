@@ -1,25 +1,22 @@
 const mongoose = require("mongoose");
 
-const leadSchema = new mongoose.Schema({
+const LeadSchema = new mongoose.Schema(
+  {
     first_name: { type: String, required: true },
     last_name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    phone: { type: String, required: true },
+    phone: { type: String },
     company: { type: String },
     city: { type: String },
     state: { type: String },
-    source: {
-        type: String,
-         required:true,
-    },
-    status: {
-        type: String,
-       required:true
-    },
+    source: { type: String, default: "website" },
+    status: { type: String, default: "new" },
     score: { type: Number, default: 0 },
     lead_value: { type: Number, default: 0 },
-    last_activity_at: { type: Date, default: null },
-    is_qualified: { type: Boolean, default: false }
-}, { timestamps: true });
+    is_qualified: { type: Boolean, default: false },
+    last_activity: { type: Date },
+  },
+  { timestamps: true } // automatically adds createdAt and updatedAt
+);
 
-module.exports = mongoose.model("Lead", leadSchema);
+module.exports = mongoose.model("Lead", LeadSchema);
