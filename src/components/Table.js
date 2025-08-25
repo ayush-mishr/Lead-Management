@@ -237,6 +237,19 @@ export const Table = () => {
             <option value="other">Other</option>
           </select>
 
+          {/* Status dropdown */}
+          <select
+            value={newLead.status}
+            onChange={(e) => setNewLead({ ...newLead, status: e.target.value })}
+            className="border p-1 text-sm rounded"
+          >
+            <option value="new">New</option>
+            <option value="contacted">Contacted</option>
+            <option value="qualified">Qualified</option>
+            <option value="lost">Lost</option>
+            <option value="won">Won</option>
+          </select>
+
           <button
             onClick={createLead}
             className="bg-green-600 hover:bg-green-700 text-white p-2 mt-2 rounded"
