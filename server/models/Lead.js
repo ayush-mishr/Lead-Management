@@ -10,8 +10,7 @@ const leadSchema = new mongoose.Schema({
     state: { type: String },
     source: {
         type: String,
-        enum: ["website", "facebook_ads", "google_ads", "referral", "events", "other"],
-        default: "website"
+         required:true,
     },
     status: {
         type: String,

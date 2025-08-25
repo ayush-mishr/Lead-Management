@@ -95,7 +95,7 @@ export const Table = () => {
     if (!validateLead(newLead)) return;
 
     try {
-      await axios.post("https://lead-management-dumg.onrender.com//api/v1/leads", newLead);
+      await axios.post("http://localhost:4000/api/v1/leads", newLead);
       alert("Lead added successfully!");
       fetchLeads();
       setNewLead({
@@ -222,6 +222,21 @@ export const Table = () => {
               className="border p-1 text-sm rounded"
             />
           ))}
+
+          {/* Source dropdown */}
+          <select
+            value={newLead.source}
+            onChange={(e) => setNewLead({ ...newLead, source: e.target.value })}
+            className="border p-1 text-sm rounded"
+          >
+            <option value="website">Website</option>
+            <option value="facebook_ads">Facebook Ads</option>
+            <option value="google_ads">Google Ads</option>
+            <option value="referral">Referral</option>
+            <option value="events">Events</option>
+            <option value="other">Other</option>
+          </select>
+
           <button
             onClick={createLead}
             className="bg-green-600 hover:bg-green-700 text-white p-2 mt-2 rounded"
