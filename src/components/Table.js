@@ -21,8 +21,8 @@ export const Table = () => {
     state: "",
     source: "website",  // default selected
     status: "new",      // default selected
-    score: 50,          // default value
-    lead_value: 1000,   // default value
+    score: 0,          // default value
+    lead_value: 0,   // default value
     is_qualified: false, // default
   });
 
