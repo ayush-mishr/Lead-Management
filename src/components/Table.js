@@ -127,7 +127,7 @@ export const Table = () => {
             defaultColDef={defaultColDef}
             pagination={true}
             paginationPageSize={10}
-            rowSelection="single"
+            rowSelection="multiple"
             onSelectionChanged={(params) => setSelectedLead(params.api.getSelectedRows()[0])}
           />
         </div>
