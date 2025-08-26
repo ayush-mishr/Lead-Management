@@ -216,26 +216,22 @@ exports.login = async(req, res) => {
 exports.verifyOtp = async (req, res) => {
   try {
     const { otp } = req.body;
-
-    // Check if OTP is provided
-    if (!otp) {
+   
+    const response = await OTP.find({ email }).sort({ createdAt: -1 }).limit(1)
+    
+    if (response.length === 0) {
+      // OTP not found for the email
       return res.status(400).json({
         success: false,
-        message: "OTP is required",
-      });
-    }
-
-    // Find OTP in database
-    const existingOtp = await OTP.findOne({ otp });
-
-    // Check if OTP exists
-    if (!existingOtp) {
+        message: "The OTP is not valid",
+      })
+    } else if (otp !== response[0].otp) {
+      // Invalid OTP
       return res.status(400).json({
         success: false,
-        message: "Invalid OTP",
-      });
+        message: "The OTP is not valid",
+      })
     }
-
     // If OTP is found → it's valid
     return res.status(200).json({
       success: true,

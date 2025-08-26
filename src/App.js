@@ -23,6 +23,7 @@ import PasswordReset from "./pages/resetPasswordPage"
 import EnterMail from './pages/EnterMail'
 import { VerifyLogin } from './pages/VerifyLogin';
 
+
 function App() {
   
 
@@ -30,6 +31,7 @@ function App() {
   return (
     <div className="flex min-h-screen w-screen flex-col bg-slate-500 font-inter ">
       <Navbar  />
+      <PasswordReset/>
     {/* <PasswordReset></PasswordReset> */}
        <Routes>
         <Route path="/" element={<Home />} />
@@ -40,6 +42,7 @@ function App() {
          <Route path="/verify-email" element={<VerifyMail />} />
            <Route path="/checkEmail" element={<EnterMail />} />
            <Route path="/verify-Login" element={<VerifyLogin/>}/>
+           <Route path='/reset-password' element={<PasswordReset/>}/>
        </Routes>
     </div>
   );

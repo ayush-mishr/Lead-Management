@@ -5,6 +5,9 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { signUp,sendOtp } from '../operations/AuthApi';
 import { useEffect } from 'react';
+import axios from 'axios';
+import toast from "react-hot-toast";
+
 
 
 export const VerifyLogin = () => {
@@ -16,26 +19,33 @@ export const VerifyLogin = () => {
     const [otp, setOtp] = useState("");
     const dispatch = useDispatch();
 
-//    const handleSubmit = (e) => {
-//     e.preventDefault();
-//      setOtp(otp);
-      
-//      dispatch(
-//       signUp(
-//       firstName,
-//       lastName,
-//       email,
-//       password,
-//       confirmPassword,
-//       accountType,
-//        otp,
-//        navigate
-//     )
-// );
+   const handleSubmit = async(e) => {
+    e.preventDefault();
+     setOtp(otp);
+     const toastId = toast.loading("Verifiying otp");
+      try{
+     const res = await axios.post("https://lead-management-2-wnen.onrender.com/api/v1/auth/verify-otp-forsign",{otp});
+     toast.dismiss(toastId);
 
+     if(res.data.success){
+     toast.success("Otp is Verified");
+     navigate("/reset-password")
+     }
+      }catch (error) {
+    toast.dismiss(toastId);
 
-//   };
-
+    if (error.response) {
+      // Handle server responses properly
+      if (error.response.status === 404) {
+        toast.error("otp not found.");
+      } else if (error.response.status === 400) {
+        toast.error("Please enter a valid otp.");
+      }
+    } else {
+      toast.error("Network error. Check your connection.");
+    }
+  }
+};
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md text-center">
