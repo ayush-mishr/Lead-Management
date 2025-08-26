@@ -21,6 +21,7 @@ import  {VerifyMail}  from './pages/VerifyMail';
 import { AgGridReact } from 'ag-grid-react';
 import PasswordReset from "./pages/resetPasswordPage"
 import EnterMail from './pages/EnterMail'
+import { VerifyLogin } from './pages/VerifyLogin';
 
 function App() {
   
@@ -38,6 +39,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
          <Route path="/verify-email" element={<VerifyMail />} />
            <Route path="/checkEmail" element={<EnterMail />} />
+           <Route path="/verify-Login" element={<VerifyLogin/>}/>
        </Routes>
     </div>
   );

@@ -3,31 +3,66 @@ import { sendOtp } from "../operations/AuthApi"
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import axios from "axios";
+import toast from "react-hot-toast";
+
 
 export default function EmailInput() {
   const [email, setEmail] = useState("");
    const dispatch =useDispatch();
    const navigate =useNavigate();
+   
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
+  const toastId = toast.loading("Checking email...");
 
-    if (!email) {
-      alert("Please enter your email.");
-      return;
-    }
+  if (!email) {
+    toast.dismiss(toastId);
+    toast.error("Please enter your email.");
+    return;
+  }
 
-    // Simple email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      alert("Please enter a valid email address.");
-      return;
+  // Email format validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    toast.dismiss(toastId);
+    toast.error("Please enter a valid email address.");
+    return;
+  }
+
+  try {
+    const response = await axios.post(
+      "https://lead-management-2-wnen.onrender.com/api/v1/auth/checkEmail",
+      { email },{timeout: 8000 }
+    );
+
+    toast.dismiss(toastId);
+
+    if (response.data.success) {
+      toast.success("Email found! Sending OTP...");
+      const response1 = await axios.post(
+      "https://lead-management-2-wnen.onrender.com/api/v1/auth/otp-login",
+      { email },{timeout: 8000 }
+    );
+      navigate("/verify-Login");
     }
-    const response = await axios.post("https://lead-management-2-wnen.onrender.com/api/v1/auth/checkEmail",{ email });
- 
-    alert(`Email submitted successfully: ${email}`);
-    dispatch(sendOtp(email, navigate));
-    setEmail("");
-  };
+  } catch (error) {
+    toast.dismiss(toastId);
+
+    if (error.response) {
+      // Handle server responses properly
+      if (error.response.status === 404) {
+        toast.error("User not found. Please sign up first.");
+      } else if (error.response.status === 400) {
+        toast.error("Please enter a valid email.");
+      } else {
+        toast.error("Server error. Please try again later.");
+      }
+    } else {
+      toast.error("Network error. Check your connection.");
+    }
+  }
+};
+
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">

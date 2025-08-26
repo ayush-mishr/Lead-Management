@@ -7,41 +7,34 @@ import { signUp,sendOtp } from '../operations/AuthApi';
 import { useEffect } from 'react';
 
 
-export const VerifyMail = () => {
+export const VerifyLogin = () => {
 
   const navigate = useNavigate();
-   const {signupData,loading} = useSelector((state) => state.auth);
-   const{firstName,lastName,email,password,confirmPassword,accountType}=signupData;
+  
     
 
     const [otp, setOtp] = useState("");
     const dispatch = useDispatch();
-    useEffect(() => {
-        // Only allow access of this route when user has filled the signup form
-        if (!signupData) {
-          navigate("/signup");
-        }
-        
-      }, []);
-   const handleSubmit = (e) => {
-    e.preventDefault();
-     setOtp(otp);
+
+//    const handleSubmit = (e) => {
+//     e.preventDefault();
+//      setOtp(otp);
       
-     dispatch(
-      signUp(
-      firstName,
-      lastName,
-      email,
-      password,
-      confirmPassword,
-      accountType,
-       otp,
-       navigate
-    )
-);
+//      dispatch(
+//       signUp(
+//       firstName,
+//       lastName,
+//       email,
+//       password,
+//       confirmPassword,
+//       accountType,
+//        otp,
+//        navigate
+//     )
+// );
 
 
-  };
+//   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -53,7 +46,7 @@ export const VerifyMail = () => {
           Please enter the OTP sent to your email or phone.
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form  className="space-y-4">
           <input
             type="text"
             placeholder="Enter OTP"

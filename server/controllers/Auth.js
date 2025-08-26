@@ -249,13 +249,11 @@ exports.verifyOtp = async (req, res) => {
     });
   }
 };
-
 // Controller to check if email already exists
 exports.checkEmail = async (req, res) => {
   try {
     const { email } = req.body;
 
-    // Validate input
     if (!email) {
       return res.status(400).json({
         success: false,
@@ -263,20 +261,87 @@ exports.checkEmail = async (req, res) => {
       });
     }
 
-    // Check if email exists in DB
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
       return res.status(200).json({
         success: true,
-        message: "Email already registered and go to next authentications",
+        message: "Email already registered. Proceed with authentication.",
+      });
+    } else {
+   
+      return res.status(404).json({
+        success: false,
+        message: "User not found. Please sign up first.",
       });
     }
   } catch (error) {
     console.error("Error checking email:", error);
     return res.status(500).json({
       success: false,
-      message: "Server error while checking email",
+      message: "Server error while checking email Or User not Found",
+    });
+  }
+};
+
+
+exports.sendOtpForLogin = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    //  Check if email is provided
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required" });
+    }
+
+    //  Check if user exists
+    const checkUserPresent = await User.findOne({ email });
+    if (!checkUserPresent) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found. Please sign up first.",
+      });
+    }
+
+    //  Generate a unique OTP
+    let otp;
+    let isUnique = false;
+
+    while (!isUnique) {
+      otp = otpGenerator.generate(6, {
+        upperCaseAlphabets: false,
+        lowerCaseAlphabets: false,
+        specialChars: false,
+      });
+
+      const existingOtp = await OTP.findOne({ otp });
+      if (!existingOtp) isUnique = true;
+    }
+
+    // Save OTP to DB
+    await OTP.create({ email, otp });
+
+    //  Send OTP to user's email
+    try {
+      await mailSender(email, "Your OTP Code", `Your OTP is ${otp}`);
+    } catch (err) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send OTP. Please try again later.",
+      });
+    }
+
+    // Success response
+    return res.status(200).json({
+      success: true,
+      message: "OTP sent successfully to your email",
+    });
+
+  } catch (error) {
+    console.error("Error sending OTP:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while sending OTP",
     });
   }
 };
