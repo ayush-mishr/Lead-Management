@@ -7,29 +7,27 @@ export default function PasswordReset() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   const handleSubmit = async(e) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
+
 
     // Validation
     if (!email || !password || !confirmPassword) {
-      setError("Please fill in all fields.");
+       alert("Please select the email")
       return;
     }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setError("Please enter a valid email address.");
+      toast.error("Please enter a valid email address.");
+      alert("please select a valid email");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      toast.error("Password do not match");
       return;
     }
     const toastId = toast.loading("waiting to change your password");
@@ -38,6 +36,9 @@ export default function PasswordReset() {
            if(res.data.success){
              toast.dismiss(toastId);
               toast.success("Password reset Successfully");
+              setEmail="";
+              setConfirmPassword="";
+              setPassword="";
               Navigate("/login");
            }
            else{
@@ -87,9 +88,6 @@ export default function PasswordReset() {
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
 
-          {/* Error / Success Messages */}
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          {success && <p className="text-green-500 text-sm">{success}</p>}
 
           {/* Submit Button */}
           <button

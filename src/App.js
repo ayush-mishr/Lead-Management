@@ -31,8 +31,7 @@ function App() {
   return (
     <div className="flex min-h-screen w-screen flex-col bg-slate-500 font-inter ">
       <Navbar  />
-      <PasswordReset/>
-    {/* <PasswordReset></PasswordReset> */}
+
        <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
