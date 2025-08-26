@@ -215,132 +215,105 @@ exports.login = async(req, res) => {
 
 exports.verifyOtp = async (req, res) => {
   try {
-    const { otp } = req.body;
-   
-    const response = await OTP.find({ email }).sort({ createdAt: -1 }).limit(1)
-    
-    if (response.length === 0) {
-      // OTP not found for the email
-      return res.status(400).json({
-        success: false,
-        message: "The OTP is not valid",
-      })
-    } else if (otp !== response[0].otp) {
-      // Invalid OTP
-      return res.status(400).json({
-        success: false,
-        message: "The OTP is not valid",
-      })
+    const {email, otp } = req.body;
+
+    if (!email || !otp) return res.status(400).json({ success: false, message: "Email and OTP are required" });
+
+    const response = await OTP.find({ email }).sort({ createdAt: -1 }).limit(1);
+
+    if (response.length === 0 || response[0].otp !== otp) {
+      return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
     }
-    // If OTP is found → it's valid
-    return res.status(200).json({
-      success: true,
-      message: "OTP verified successfully",
-    });
+
+    return res.status(200).json({ success: true, message: "OTP verified successfully" });
   } catch (error) {
     console.error("Error verifying OTP:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Server error while verifying OTP",
-    });
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
 // Controller to check if email already exists
-exports.checkEmail = async (req, res) => {
-  try {
-    const { email } = req.body;
+// exports.checkEmail = async (req, res) => {
+//   try {
+//     const { email } = req.body;
 
-    if (!email) {
-      return res.status(400).json({
-        success: false,
-        message: "Email is required",
-      });
-    }
+//     if (!email) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Email is required",
+//       });
+//     }
 
-    const existingUser = await User.findOne({ email });
+//     const existingUser = await User.findOne({ email });
 
-    if (existingUser) {
-      return res.status(200).json({
-        success: true,
-        message: "Email already registered. Proceed with authentication.",
-      });
-    } else {
+//     if (existingUser) {
+//       return res.status(200).json({
+//         success: true,
+//         message: "Email already registered. Proceed with authentication.",
+//       });
+//     } else {
    
-      return res.status(404).json({
-        success: false,
-        message: "User not found. Please sign up first.",
-      });
-    }
-  } catch (error) {
-    console.error("Error checking email:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Server error while checking email Or User not Found",
-    });
-  }
-};
+//       return res.status(404).json({
+//         success: false,
+//         message: "User not found. Please sign up first.",
+//       });
+//     }
+//   } catch (error) {
+//     console.error("Error checking email:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Server error while checking email Or User not Found",
+//     });
+//   }
+// };
 
+//sendOtpForLogin
 
 exports.sendOtpForLogin = async (req, res) => {
+  
   try {
-    const { email } = req.body;
+    const { email } = req.body
 
-    //  Check if email is provided
-    if (!email) {
-      return res.status(400).json({ success: false, message: "Email is required" });
-    }
+    // Check if user is already present
+    // Find user with provided email
+    const checkUserPresent = await User.findOne({ email })
+    // to be used in case of signup
 
-    //  Check if user exists
-    const checkUserPresent = await User.findOne({ email });
+    // If user found with provided email
     if (!checkUserPresent) {
-      return res.status(404).json({
+      // Return 401 Unauthorized status code with error message
+      return res.status(401).json({
         success: false,
-        message: "User not found. Please sign up first.",
-      });
+        message: `User is Not Registered`,
+      })
     }
-
-    //  Generate a unique OTP
-    let otp;
-    let isUnique = false;
-
-    while (!isUnique) {
+    
+    var otp = otpGenerator.generate(6, {
+      upperCaseAlphabets: false,
+      lowerCaseAlphabets: false,
+      specialChars: false,
+    })
+    const result = await OTP.findOne({ otp: otp })
+    console.log("Result is Generate OTP Func")
+    console.log("OTP", otp)
+    console.log("Result", result)
+    while (result) {
       otp = otpGenerator.generate(6, {
         upperCaseAlphabets: false,
-        lowerCaseAlphabets: false,
-        specialChars: false,
-      });
-
-      const existingOtp = await OTP.findOne({ otp });
-      if (!existingOtp) isUnique = true;
+      })
     }
-
-    // Save OTP to DB
-    await OTP.create({ email, otp });
-
-    //  Send OTP to user's email
-    try {
-      await mailSender(email, "Your OTP Code", `Your OTP is ${otp}`);
-    } catch (err) {
-      return res.status(500).json({
-        success: false,
-        message: "Failed to send OTP. Please try again later.",
-      });
-    }
-
-    // Success response
-    return res.status(200).json({
+    const otpPayload = { email, otp }
+    const otpBody = await OTP.create(otpPayload)
+    console.log("OTP Body", otpBody)
+    res.status(200).json({
       success: true,
-      message: "OTP sent successfully to your email",
-    });
-
+      message: `OTP Sent Successfully`,
+      otp,
+    })
   } catch (error) {
-    console.error("Error sending OTP:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Server error while sending OTP",
-    });
+    console.log(error.message)
+    return res.status(500).json({ success: false, error: error.message })
   }
-};
+}
 
 // resetPassword
 exports.resetPassword = async(req, res) => {
@@ -348,7 +321,7 @@ exports.resetPassword = async(req, res) => {
        
         const {email, password, confirmPassword } = req.body;
         
-        if(email,!password || !confirmPassword){
+        if(!email||!password || !confirmPassword){
             return res.status(400).json({
                 success:false,
                 message:"All fields are required",

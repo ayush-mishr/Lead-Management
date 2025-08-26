@@ -36,9 +36,9 @@ export default function PasswordReset() {
            if(res.data.success){
              toast.dismiss(toastId);
               toast.success("Password reset Successfully");
-              setEmail="";
-              setConfirmPassword="";
-              setPassword="";
+              setEmail("");
+              setConfirmPassword("");
+              setPassword("");
               Navigate("/login");
            }
            else{

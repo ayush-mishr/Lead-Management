@@ -24,12 +24,14 @@ export const VerifyLogin = () => {
      setOtp(otp);
      const toastId = toast.loading("Verifiying otp");
       try{
-     const res = await axios.post("https://lead-management-2-wnen.onrender.com/api/v1/auth/verify-otp-forsign",{otp});
+       const email =  localStorage.getItem("userEmail");  
+       console.log("print toooooo ho gaya bhai..........",email)  
+     const res = await axios.post("https://lead-management-2-wnen.onrender.com/api/v1/auth/verify-otp-forsign",{email,otp});
      toast.dismiss(toastId);
-
+     
      if(res.data.success){
      toast.success("Otp is Verified");
-     navigate("/reset-password")
+     navigate("/reset-password-page")
      }
       }catch (error) {
     toast.dismiss(toastId);
@@ -56,7 +58,7 @@ export const VerifyLogin = () => {
           Please enter the OTP sent to your email or phone.
         </p>
 
-        <form  className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="text"
             placeholder="Enter OTP"

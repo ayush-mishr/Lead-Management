@@ -8,7 +8,7 @@ const {
   signUp,
   sendOTP,
   verifyOtp, 
-  checkEmail,sendOtpForLogin,resetPassword
+ sendOtpForLogin,resetPassword
   
 } = require("../controllers/Auth")
 
@@ -34,11 +34,9 @@ router.post("/sendotp", sendOTP);
 
 // Route for resetting user's password after verification
 router.post("/reset-password", resetPassword);
-router.post("/verify-otp", sendOTP);
 router.post("/verify-email", signUp);
 router.post("/verify-otp-forsign", verifyOtp);
-
-router.post("/checkEmail", checkEmail);
+// router.post("/checkEmail", checkEmail);
 router.post("/otp-login",sendOtpForLogin);
 
 

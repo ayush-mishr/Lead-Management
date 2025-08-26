@@ -7,7 +7,6 @@ import { Navbar } from './components/Navbar';
 import Login from './pages/Login';
 import  Home  from './pages/Home';
 import { Dashboard } from './pages/Dashboard';
-// import { Login } from "./pages/Login"
 import  SignUp  from './pages/SignUp';
 import { AboutUs } from './pages/AboutUs';
 import { Toaster } from 'react-hot-toast';
@@ -41,7 +40,7 @@ function App() {
          <Route path="/verify-email" element={<VerifyMail />} />
            <Route path="/checkEmail" element={<EnterMail />} />
            <Route path="/verify-Login" element={<VerifyLogin/>}/>
-           <Route path='/reset-password' element={<PasswordReset/>}/>
+           <Route path='/reset-password-page' element={<PasswordReset/>}/>
        </Routes>
     </div>
   );

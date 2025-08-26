@@ -31,25 +31,19 @@ export default function EmailInput() {
 
   try {
     const response = await axios.post(
-      "https://lead-management-2-wnen.onrender.com/api/v1/auth/checkEmail",
-      { email },{timeout: 8000 }
-    );
-
-    toast.dismiss(toastId);
-
+    "https://lead-management-2-wnen.onrender.com/api/v1/auth/otp-login", { email },{timeout: 8000 });
+     toast.dismiss(toastId);
     if (response.data.success) {
       toast.success("Email found! Sending OTP...");
-      const response1 = await axios.post(
-      "https://lead-management-2-wnen.onrender.com/api/v1/auth/otp-login",
-      { email },{timeout: 8000 }
-    );
+      localStorage.setItem("userEmail", email);
       navigate("/verify-Login");
+      
     }
   } catch (error) {
     toast.dismiss(toastId);
 
     if (error.response) {
-      // Handle server responses properly
+     
       if (error.response.status === 404) {
         toast.error("User not found. Please sign up first.");
       } else if (error.response.status === 400) {
