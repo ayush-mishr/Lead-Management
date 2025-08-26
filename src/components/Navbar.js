@@ -1,5 +1,5 @@
-import React from 'react'
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react'
+import { Link, useLocation } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -8,8 +8,12 @@ import { setToken } from '../slices/auth';
 import {setSignupData} from "../slices/auth"
 import "../App.css"
 
-
 export const Navbar = () => {
+  const [flag, setFlag]=useState(true);
+  const location =useLocation();
+  function matchRoutes(path){
+    return (path===location.pathname);
+  }
 const navigate=useNavigate();
 const dispatch=useDispatch();
 const{token}=useSelector((state)=>state.auth);
@@ -32,8 +36,13 @@ const{signupData}=useSelector((state)=>state.auth);
        </div>
         <nav className='flex justify-center items-center '>
             <ul className='flex gap-5 text-white font-semibold text-lg '>
-                <li><Link to="/">Home</Link></li>
-                <li><Link to="/about">About Us</Link></li>
+         
+          
+            <li><Link to="/"><p className={`${matchRoutes("/")?"text-orange-500":"text-white"}`}>Home</p></Link></li>
+          
+          <li><Link to="/about"><p className={`${matchRoutes("/about")?"text-orange-500":"text-white"}`}>About Us</p></Link></li>
+  
+               
                 
             </ul>
         </nav>

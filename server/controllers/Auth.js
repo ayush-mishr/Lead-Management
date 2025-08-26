@@ -5,6 +5,7 @@ const otpGenerator = require('otp-generator');
 const jwt = require('jsonwebtoken');
 const mailSender = require('../utils/mailSender');
 require('dotenv').config();
+
  
 
 exports.sendOTP = async (req, res) => {
@@ -212,3 +213,70 @@ exports.login = async(req, res) => {
     }
 }
 
+exports.verifyOtp = async (req, res) => {
+  try {
+    const { otp } = req.body;
+
+    // Check if OTP is provided
+    if (!otp) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP is required",
+      });
+    }
+
+    // Find OTP in database
+    const existingOtp = await OTP.findOne({ otp });
+
+    // Check if OTP exists
+    if (!existingOtp) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP",
+      });
+    }
+
+    // If OTP is found → it's valid
+    return res.status(200).json({
+      success: true,
+      message: "OTP verified successfully",
+    });
+  } catch (error) {
+    console.error("Error verifying OTP:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while verifying OTP",
+    });
+  }
+};
+
+// Controller to check if email already exists
+exports.checkEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Validate input
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
+      });
+    }
+
+    // Check if email exists in DB
+    const existingUser = await User.findOne({ email });
+
+    if (existingUser) {
+      return res.status(200).json({
+        success: true,
+        message: "Email already registered and go to next authentications",
+      });
+    }
+  } catch (error) {
+    console.error("Error checking email:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while checking email",
+    });
+  }
+};

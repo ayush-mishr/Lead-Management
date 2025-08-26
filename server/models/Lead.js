@@ -13,7 +13,7 @@ const LeadSchema = new mongoose.Schema(
     status: { type: String, default: "new" },
     score: { type: Number, default: 0 },
     lead_value: { type: Number, default: 0 },
-    is_qualified: { type: Boolean, default: false },
+    is_qualified: { type: String, default:"false" },
     last_activity: { type: Date },
   },
   { timestamps: true } // automatically adds createdAt and updatedAt

@@ -5,12 +5,15 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { signUp,sendOtp } from '../operations/AuthApi';
 import { useEffect } from 'react';
+import axios from 'axios';
+import toast from 'react-hot-toast';
+
 
 
 export const VerifyMail = () => {
 
   const navigate = useNavigate();
-   const {signupData,loading} = useSelector((state) => state.auth);
+   const {signupData,loading,token} = useSelector((state) => state.auth);
    const{firstName,lastName,email,password,confirmPassword,accountType}=signupData;
     
 
@@ -23,11 +26,12 @@ export const VerifyMail = () => {
         }
         
       }, []);
-   const handleSubmit = (e) => {
+   const handleSubmit = async(e) => {
     e.preventDefault();
      setOtp(otp);
       
-     dispatch(
+if(firstName||lastName||email||password||confirmPassword||accountType||otp){
+       dispatch(
       signUp(
       firstName,
       lastName,
@@ -38,7 +42,17 @@ export const VerifyMail = () => {
        otp,
        navigate
     )
-);
+)}
+else{
+  const res = axios.post(`https://lead-management-2-wnen.onrender.com/api/v1/auth/verify-otp-forsign`);
+  if(!res){
+    toast.error("otp is not valid");
+    console.log("something is wrong");
+  }
+  else{
+    dispatch("/Enter-email");
+  }
+}
 
 
   };

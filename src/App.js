@@ -19,6 +19,8 @@ import rootReducer from './reducers';
 import { Link } from 'react-router-dom';
 import  {VerifyMail}  from './pages/VerifyMail';
 import { AgGridReact } from 'ag-grid-react';
+import PasswordReset from "./pages/resetPasswordPage"
+import EnterMail from './pages/EnterMail'
 
 function App() {
   
@@ -27,7 +29,7 @@ function App() {
   return (
     <div className="flex min-h-screen w-screen flex-col bg-slate-500 font-inter ">
       <Navbar  />
-    
+    {/* <PasswordReset></PasswordReset> */}
        <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
@@ -35,6 +37,7 @@ function App() {
         <Route path="/about" element={<AboutUs />} />
         <Route path="/dashboard" element={<Dashboard />} />
          <Route path="/verify-email" element={<VerifyMail />} />
+           <Route path="/checkEmail" element={<EnterMail />} />
        </Routes>
     </div>
   );

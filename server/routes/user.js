@@ -7,6 +7,8 @@ const {
   login,
   signUp,
   sendOTP,
+  verifyOtp, 
+  checkEmail
   
 } = require("../controllers/Auth")
 const {
@@ -37,6 +39,10 @@ router.post("/reset-password-token", resetPasswordToken)
 router.post("/reset-password", resetPassword)
 router.post("/verify-otp", sendOTP);
 router.post("/verify-email", signUp);
+router.post("/verify-otp-forsign", verifyOtp);
+
+router.post("/checkEmail", checkEmail);
+
 
 // Export the router for use in the main application
 module.exports = router;
