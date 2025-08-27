@@ -36,7 +36,6 @@ router.post("/sendotp", sendOTP);
 router.post("/reset-password", resetPassword);
 router.post("/verify-email", signUp);
 router.post("/verify-otp-forsign", verifyOtp);
-// router.post("/checkEmail", checkEmail);
 router.post("/otp-login",sendOtpForLogin);
 
 

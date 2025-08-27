@@ -231,40 +231,7 @@ exports.verifyOtp = async (req, res) => {
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
-// Controller to check if email already exists
-// exports.checkEmail = async (req, res) => {
-//   try {
-//     const { email } = req.body;
 
-//     if (!email) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Email is required",
-//       });
-//     }
-
-//     const existingUser = await User.findOne({ email });
-
-//     if (existingUser) {
-//       return res.status(200).json({
-//         success: true,
-//         message: "Email already registered. Proceed with authentication.",
-//       });
-//     } else {
-   
-//       return res.status(404).json({
-//         success: false,
-//         message: "User not found. Please sign up first.",
-//       });
-//     }
-//   } catch (error) {
-//     console.error("Error checking email:", error);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Server error while checking email Or User not Found",
-//     });
-//   }
-// };
 
 //sendOtpForLogin
 
@@ -333,7 +300,7 @@ exports.resetPassword = async(req, res) => {
                 message:"Password and Confirm Password do not match",
             });
         }
-        const user = await User.findOne({ email: email, resetPasswordExpires: { $gt: Date.now() } });
+        const user = await User.findOne({ email: email});
         if(!user){
             return res.status(400).json({
                 success:false,

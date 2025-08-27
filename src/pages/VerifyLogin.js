@@ -25,7 +25,6 @@ export const VerifyLogin = () => {
      const toastId = toast.loading("Verifiying otp");
       try{
        const email =  localStorage.getItem("userEmail");  
-       console.log("print toooooo ho gaya bhai..........",email)  
      const res = await axios.post("https://lead-management-2-wnen.onrender.com/api/v1/auth/verify-otp-forsign",{email,otp});
      toast.dismiss(toastId);
      

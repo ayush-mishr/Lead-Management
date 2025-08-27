@@ -1,20 +1,20 @@
 import React, { useState } from "react";
-import toast from "react-hot-toast"
-import axios from "axios"
-import { Navigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 export default function PasswordReset() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const navigate = useNavigate();
 
-  const handleSubmit = async(e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
 
     // Validation
     if (!email || !password || !confirmPassword) {
-       alert("Please select the email")
+      toast.error("All fields are required!");
       return;
     }
 
@@ -22,35 +22,48 @@ export default function PasswordReset() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       toast.error("Please enter a valid email address.");
-      alert("please select a valid email");
       return;
     }
 
     if (password !== confirmPassword) {
-      toast.error("Password do not match");
+      toast.error("Passwords do not match!");
       return;
     }
-    const toastId = toast.loading("waiting to change your password");
-      try{
-      const res =  axios.post("https://lead-management-2-wnen.onrender.com/api/v1/auth/reset-password",{email,password,confirmPassword});
-           if(res.data.success){
-             toast.dismiss(toastId);
-              toast.success("Password reset Successfully");
-              setEmail("");
-              setConfirmPassword("");
-              setPassword("");
-              Navigate("/login");
-           }
-           else{
-            toast.dismiss(toastId);
-            toast.error("something is wrong");
-           }
-      }catch (error) {
-     toast.dismiss(toastId);
-     toast.error("Can not reset Password");
-};
-  }
 
+    const toastId = toast.loading("Resetting your password...");
+
+    try {
+      console.log("print toooooo ho gaya bhai before..........",email)  
+      const res = await axios.post(
+        "https://lead-management-2-wnen.onrender.com/api/v1/auth/reset-password",
+        { email, password, confirmPassword }
+      );
+     console.log("print toooooo ho gaya bhai.after.........",email)  
+      if (res.data.success) {
+        toast.dismiss(toastId);
+        toast.success("Password reset successfully!");
+
+        // 🔹 Store values in localStorage (Optional)
+        // localStorage.setItem("resetEmail", email);
+        // localStorage.setItem("resetPassword", password);
+        // localStorage.setItem("resetConfirmPassword", confirmPassword);
+
+        // Clear inputs
+        setEmail("");
+        setPassword("");
+        setConfirmPassword("");
+
+        // Redirect to login page
+        navigate("/login");
+      } else {
+        toast.dismiss(toastId);
+        toast.error(res.data.message || "Something went wrong!");
+      }
+    } catch (error) {
+      toast.dismiss(toastId);
+      toast.error(error.response?.data?.message || "Failed to reset password!");
+    }
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -60,7 +73,10 @@ export default function PasswordReset() {
           Please confirm your email and enter a new password.
         </p>
 
-        <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col items-center gap-4"
+        >
           {/* Email Input */}
           <input
             type="email"
@@ -87,7 +103,6 @@ export default function PasswordReset() {
             onChange={(e) => setConfirmPassword(e.target.value)}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-
 
           {/* Submit Button */}
           <button
