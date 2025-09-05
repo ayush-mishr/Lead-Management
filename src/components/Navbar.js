@@ -26,53 +26,28 @@ export const Navbar = ({ manualLogout }) => {
 
   // Memoize user data calculations
   const userInitials = useMemo(() => {
-    console.log('🔍 NAVBAR DEBUG - Calculating user initials:');
-    console.log('  user:', user);
-    console.log('  signupData:', signupData);
-    console.log('  token:', token ? 'exists' : 'null');
-    
     if (user && user.firstName && user.lastName) {
-      const initials = `${user.firstName.charAt(0).toUpperCase()}${user.lastName.charAt(0).toUpperCase()}`;
-      console.log('  ✅ User initials from user data:', initials);
-      return initials;
+      return `${user.firstName.charAt(0).toUpperCase()}${user.lastName.charAt(0).toUpperCase()}`;
     } else if (signupData && signupData.firstName && signupData.lastName) {
-      const initials = `${signupData.firstName.charAt(0).toUpperCase()}${signupData.lastName.charAt(0).toUpperCase()}`;
-      console.log('  ✅ User initials from signup data:', initials);
-      return initials;
+      return `${signupData.firstName.charAt(0).toUpperCase()}${signupData.lastName.charAt(0).toUpperCase()}`;
     } else if (user && user.firstName) {
-      const initials = user.firstName.charAt(0).toUpperCase();
-      console.log('  ⚠️ Single initial from user firstName:', initials);
-      return initials;
+      return user.firstName.charAt(0).toUpperCase();
     } else if (signupData && signupData.firstName) {
-      const initials = signupData.firstName.charAt(0).toUpperCase();
-      console.log('  ⚠️ Single initial from signup firstName:', initials);
-      return initials;
+      return signupData.firstName.charAt(0).toUpperCase();
     }
-    console.log('  ❌ No initials available');
     return null;
   }, [user, signupData, token]);
 
   const userName = useMemo(() => {
-    console.log('👤 NAVBAR DEBUG - Calculating user name:');
-    
     if (user && user.firstName && user.lastName) {
-      const name = `${user.firstName} ${user.lastName}`;
-      console.log('  ✅ Full name from user data:', name);
-      return name;
+      return `${user.firstName} ${user.lastName}`;
     } else if (signupData && signupData.firstName && signupData.lastName) {
-      const name = `${signupData.firstName} ${signupData.lastName}`;
-      console.log('  ✅ Full name from signup data:', name);
-      return name;
+      return `${signupData.firstName} ${signupData.lastName}`;
     } else if (user && user.firstName) {
-      const name = user.firstName;
-      console.log('  ⚠️ First name only from user data:', name);
-      return name;
+      return user.firstName;
     } else if (signupData && signupData.firstName) {
-      const name = signupData.firstName;
-      console.log('  ⚠️ First name only from signup data:', name);
-      return name;
+      return signupData.firstName;
     }
-    console.log('  ❌ No user name available');
     return null;
   }, [user, signupData, token]);
 
@@ -134,17 +109,7 @@ export const Navbar = ({ manualLogout }) => {
     // Show user profile if user is authenticated AND has name data
     const isAuthenticated = token !== null;
     const hasUserData = userName && userInitials;
-    const shouldShow = isAuthenticated && hasUserData;
-    
-    console.log('🎛️ NAVBAR RENDER STATE:');
-    console.log('  isAuthenticated:', isAuthenticated);
-    console.log('  hasUserData:', hasUserData);
-    console.log('  showAuthButtons:', !isAuthenticated);
-    console.log('  showUserProfile:', shouldShow);
-    console.log('  userName:', userName);
-    console.log('  userInitials:', userInitials);
-    
-    return shouldShow;
+    return isAuthenticated && hasUserData;
   }, [token, userName, userInitials]);
   
   const showFallbackLogout = useMemo(() => {
