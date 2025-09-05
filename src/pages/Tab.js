@@ -1,4 +1,10 @@
+import React, { useCallback } from "react";
+
 export default function Tab({ tabData, field, setField }) {
+  const handleTabClick = useCallback((tabType) => {
+    setField(tabType);
+  }, [setField]);
+
   return (
     <div
       style={{
@@ -9,7 +15,7 @@ export default function Tab({ tabData, field, setField }) {
       {tabData.map((tab) => (
         <button
           key={tab.id}
-          onClick={() => setField(tab.type)}
+          onClick={() => handleTabClick(tab.type)}
           className={`${
             field === tab.type
               ? "bg-slate-500 text-red-700"

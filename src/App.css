@@ -1,9 +1,56 @@
 .App {
  
 }
+
+/* Custom animations for homepage */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 1s ease-out;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Parallax effect */
+.parallax {
+  background-attachment: fixed;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
 .navbar {
   position: relative;
   z-index: 50;
+}
+
+/* Navbar dropdown styles */
+.navbar-dropdown {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 51;
+}
+
+.navbar-dropdown-menu {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e5e7eb;
+  min-width: 200px;
+  overflow: hidden;
 }
 
 .App-logo {

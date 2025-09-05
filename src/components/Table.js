@@ -5,10 +5,11 @@ import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import axios from "axios";
+import { useSelector } from 'react-redux';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
-
-export const Table = () => {
+export const Table = ({ onDataChange }) => {
+  const { token } = useSelector((state) => state.auth);
   const [rowData, setRowData] = useState([]);
   const [selectedLead, setSelectedLead] = useState(null);
   const [gridApi, setGridApi] = useState(null);
@@ -92,17 +93,52 @@ export const Table = () => {
     floatingFilter: true,
   };
 
-  // Fetch Leads
+  // Fetch Leads - Only user-specific data
   const fetchLeads = async () => {
     try {
-      const res = await axios.get("https://lead-management-2-wnen.onrender.com/api/v1/leads");
+      // For users without token, don't fetch any data
+      if (!token) {
+        setRowData([]);
+        if (onDataChange) {
+          onDataChange();
+        }
+        return;
+      }
+
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}` // Always require authentication
+        }
+      };
+      
+      const res = await axios.get("https://lead-management-2-wnen.onrender.com/api/v1/leads", config);
+      
+      // Only get user's own leads - the API should filter by user
       const leads = res.data.data.map((lead) => ({
         ...lead,
-        is_qualified: lead.is_qualified?.toString() || "false", // Always convert to string
+        is_qualified: lead.is_qualified?.toString() || "false", // Always convert to string.
       }));
+      
       setRowData(leads);
+      
+      // Notify parent component about data change
+      if (onDataChange) {
+        onDataChange();
+      }
     } catch (err) {
-      console.error(err);
+      console.error("Error fetching leads:", err);
+      
+      // For any error (including unauthorized), ensure empty data
+      setRowData([]);
+      
+      if (err.response?.status === 401) {
+        console.error("Unauthorized access. User needs to login again.");
+      }
+      
+      // Still notify parent to update stats to 0
+      if (onDataChange) {
+        onDataChange();
+      }
     }
   };
 
@@ -110,7 +146,37 @@ export const Table = () => {
     fetchLeads();
   }, []);
 
-  // Validation
+  // Enhanced empty state component for new users
+  const EmptyState = () => (
+    <div className="flex flex-col items-center justify-center h-64 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border-2 border-dashed border-blue-200">
+      <div className="text-center">
+        <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 mb-4">
+          <svg className="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </div>
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">Your Personal Lead Management Starts Here!</h3>
+        <p className="text-gray-600 mb-1">Welcome to your private dashboard. This space is exclusively yours.</p>
+        <p className="text-sm text-gray-500 mb-6">Add your first lead below to start tracking and managing your business opportunities.</p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <button
+            onClick={() => document.getElementById('add-lead-form').scrollIntoView({ behavior: 'smooth' })}
+            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 shadow-lg hover:shadow-xl"
+          >
+            <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Add Your First Lead
+          </button>
+          <div className="text-xs text-gray-400 self-center">
+            ✨ Start building your lead pipeline today
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Validation - Updated for user-specific emails
   const validateLead = (lead, isNew = true) => {
     if (!lead.first_name || !lead.last_name || !lead.email) {
       alert("First name, last name, and email are required.");
@@ -124,11 +190,13 @@ export const Table = () => {
       alert("Lead value cannot be negative.");
       return false;
     }
+    
+    // Check for duplicate email in current user's leads
     const duplicate = rowData.find(
       (r) => r.email === lead.email && (isNew || r._id !== lead._id)
     );
     if (duplicate) {
-      alert("Email must be unique.");
+      alert("You already have a lead with this email address.");
       return false;
     }
     return true;
@@ -138,14 +206,27 @@ export const Table = () => {
   const createLead = async () => {
     if (!validateLead(newLead)) return;
     try {
+      const config = {
+        headers: {}
+      };
+      
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      
       const payload = {
         ...newLead,
         is_qualified: newLead.is_qualified.toString(),
         last_activity: new Date().toISOString(),
       };
-      await axios.post("https://lead-management-2-wnen.onrender.com/api/v1/leads", payload);
-      alert("Lead added!");
+      await axios.post("https://lead-management-2-wnen.onrender.com/api/v1/leads", payload, config);
+      alert("Lead added successfully!");
       fetchLeads();
+      
+      // Notify parent component
+      if (onDataChange) {
+        onDataChange();
+      }
       setNewLead({
         first_name: "",
         last_name: "",
@@ -162,8 +243,9 @@ export const Table = () => {
         last_activity: new Date().toISOString(),
       });
     } catch (err) {
-      console.error(err);
-      alert("Failed to add lead.");
+      console.error("Error creating lead:", err);
+      const errorMessage = err.response?.data?.message || "Failed to add lead.";
+      alert(errorMessage);
     }
   };
 
@@ -172,6 +254,14 @@ export const Table = () => {
     if (!selectedLead) return alert("Select a lead to update!");
     if (!validateLead(selectedLead, false)) return;
     try {
+      const config = {
+        headers: {}
+      };
+      
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      
       const payload = {
         ...selectedLead,
         is_qualified: selectedLead.is_qualified.toString(),
@@ -179,13 +269,20 @@ export const Table = () => {
       };
       await axios.put(
         `https://lead-management-2-wnen.onrender.com/api/v1/leads/${selectedLead._id}`,
-        payload
+        payload,
+        config
       );
-      alert("Lead updated!");
+      alert("Lead updated successfully!");
       fetchLeads();
+      
+      // Notify parent component
+      if (onDataChange) {
+        onDataChange();
+      }
     } catch (err) {
-      console.error(err);
-      alert("Failed to update lead.");
+      console.error("Error updating lead:", err);
+      const errorMessage = err.response?.data?.message || "Failed to update lead.";
+      alert(errorMessage);
     }
   };
 
@@ -194,14 +291,29 @@ export const Table = () => {
     if (!selectedLead) return alert("Select a lead to delete!");
     if (!window.confirm("Are you sure you want to delete this lead?")) return;
     try {
+      const config = {
+        headers: {}
+      };
+      
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      
       await axios.delete(
-        `https://lead-management-2-wnen.onrender.com/api/v1/leads/${selectedLead._id}`
+        `https://lead-management-2-wnen.onrender.com/api/v1/leads/${selectedLead._id}`,
+        config
       );
-      alert("Lead deleted!");
+      alert("Lead deleted successfully!");
       fetchLeads();
+      
+      // Notify parent component
+      if (onDataChange) {
+        onDataChange();
+      }
     } catch (err) {
-      console.error(err);
-      alert("Failed to delete lead.");
+      console.error("Error deleting lead:", err);
+      const errorMessage = err.response?.data?.message || "Failed to delete lead.";
+      alert(errorMessage);
     }
   };
 
@@ -223,22 +335,35 @@ export const Table = () => {
 
 
 
-        {/* Table */}
-        <div className="ag-theme-quartz" style={{ height: 500, width: "100%" }}>
-          <AgGridReact
-            rowData={rowData}
-            columnDefs={columnDefs}
-            defaultColDef={defaultColDef}
-            pagination={true}
-            paginationPageSize={10}
-            paginationPageSizeSelector={[10, 25, 50, 100]}
-            rowSelection="multiple"
-            onSelectionChanged={(params) =>
-              setSelectedLead(params.api.getSelectedRows()[0])
-            }
-            onGridReady={onGridReady}
-          />
-        </div>
+        {/* Search */}
+        <input
+          type="text"
+          placeholder="Search leads..."
+          onChange={onQuickFilterChange}
+          className="mb-4 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+        />
+
+        {/* Table or Empty State */}
+        {rowData.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <div className="ag-theme-quartz" style={{ height: 500, width: "100%" }}>
+            <AgGridReact
+              rowData={rowData}
+              columnDefs={columnDefs}
+              defaultColDef={defaultColDef}
+              pagination={true}
+              paginationPageSize={10}
+              paginationPageSizeSelector={[10, 25, 50, 100]}
+              rowSelection="multiple"
+              theme="legacy"
+              onSelectionChanged={(params) =>
+                setSelectedLead(params.api.getSelectedRows()[0])
+              }
+              onGridReady={onGridReady}
+            />
+          </div>
+        )}
 
         {/* Buttons */}
         <div className="flex gap-4 mt-4">
@@ -258,7 +383,7 @@ export const Table = () => {
       </div>
 
       {/* Add Lead Form */}
-      <div className="w-1/4 bg-gray-100 shadow-md rounded-lg p-4">
+      <div id="add-lead-form" className="w-1/4 bg-gray-100 shadow-md rounded-lg p-4">
         <h3 className="text-lg font-semibold mb-3">Add New Lead</h3>
         <div className="flex flex-col gap-3">
           {[{ name: "first_name", label: "First Name" },
