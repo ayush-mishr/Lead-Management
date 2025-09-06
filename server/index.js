@@ -17,10 +17,29 @@ database.connect();
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-    origin:[ 'http://localhost:3000','https://lead-management-woad.vercel.app'],
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps, Postman, etc.)
+        if (!origin) return callback(null, true);
+        
+        // List of allowed origins
+        const allowedOrigins = [
+            'http://localhost:3000',
+            'https://lead-management-woad.vercel.app',
+            'https://lead-management-ayush.vercel.app',
+            // Add any other Vercel domains you might have
+        ];
+        
+        // Check if the origin is in the allowed list or is a Vercel app
+        if (allowedOrigins.indexOf(origin) !== -1 || origin.includes('.vercel.app')) {
+            return callback(null, true);
+        }
+        
+        // For development, log the origin to help with debugging
+        console.log('Blocked CORS request from origin:', origin);
+        const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+        return callback(new Error(msg), false);
+    },
     credentials: true,
-    
- 
 }));
 app.use(fileUpload({
     useTempFiles: true,
@@ -40,6 +59,6 @@ app.get("/", (req, res) => {
    });
 });
 //server listening
-app.listen(4000, () => {
-    console.log(`Server is running on port ${4000}`);
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
