@@ -13,9 +13,11 @@ const API_BASE_URL = process.env.REACT_APP_BASE_URL || 'http://localhost:4000/ap
 
 export const Table = () => {
   const { token } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.profile);
   const [rowData, setRowData] = useState([]);
   const [selectedLead, setSelectedLead] = useState(null);
   const [gridApi, setGridApi] = useState(null);
+  const [userStats, setUserStats] = useState(null);
   const [newLead, setNewLead] = useState({
     first_name: "",
     last_name: "",
@@ -109,6 +111,18 @@ export const Table = () => {
     floatingFilter: true,
   };
 
+  // Fetch User Lead Statistics
+  const fetchUserStats = async () => {
+    if (!token) return;
+    
+    try {
+      const res = await axios.get(`${API_BASE_URL}/leads/stats`, getAuthHeaders());
+      setUserStats(res.data.data);
+    } catch (err) {
+      console.error('Error fetching user stats:', err);
+    }
+  };
+
   // Fetch Leads with authentication
   const fetchLeads = async () => {
     if (!token) {
@@ -124,6 +138,11 @@ export const Table = () => {
         is_qualified: lead.is_qualified?.toString() || "false", // Always convert to string.
       }));
       setRowData(leads);
+      
+      // Show user isolation confirmation
+      if (res.data.userLeads) {
+        console.log(`✅ User Isolation Active: Showing ${leads.length} leads for current user only`);
+      }
     } catch (err) {
       console.error('Error fetching leads:', err);
       if (err.response?.status === 401) {
@@ -142,6 +161,7 @@ export const Table = () => {
   useEffect(() => {
     if (token) {
       fetchLeads();
+      fetchUserStats();
     }
   }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -184,9 +204,10 @@ export const Table = () => {
         is_qualified: newLead.is_qualified.toString(),
         last_activity: new Date().toISOString(),
       };
-      await axios.post(`${API_BASE_URL}/leads`, payload, getAuthHeaders());
-      alert("Lead added!");
+      const response = await axios.post(`${API_BASE_URL}/leads`, payload, getAuthHeaders());
+      alert(response.data.message || "Lead added successfully!");
       fetchLeads();
+      fetchUserStats(); // Refresh stats
       setNewLead({
         first_name: "",
         last_name: "",
@@ -206,6 +227,8 @@ export const Table = () => {
       console.error('Error creating lead:', err);
       if (err.response?.status === 401) {
         alert('Authentication failed. Please login again.');
+      } else if (err.response?.status === 400) {
+        alert(err.response.data.message || 'Invalid data. Please check your input.');
       } else if (err.response?.status === 500) {
         alert('Server error. Please try again later.');
       } else {
@@ -291,22 +314,46 @@ export const Table = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-full mx-auto">
-        {/* Compact Header Section */}
+        {/* Enhanced User-Specific Header Section */}
         <div className="mb-4">
           <div className="bg-white rounded-lg shadow-sm border p-4">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bold text-gray-800 mb-1">
-                  📊 Lead Management Dashboard
+                  📊 My Lead Dashboard
                 </h1>
                 <p className="text-gray-600 text-sm">
-                  Manage and track your leads
+                  {user?.firstName ? `Welcome back, ${user.firstName}!` : 'Welcome!'} Manage your personal leads
                 </p>
+                <div className="mt-2 flex items-center space-x-4">
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    🔒 Private Dashboard
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Only you can see and manage these leads
+                  </span>
+                </div>
               </div>
               <div className="text-right">
-                <div className="bg-blue-50 rounded-lg px-3 py-2">
-                  <span className="text-blue-600 font-semibold text-sm">{rowData.length} Total Leads</span>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-blue-50 rounded-lg px-3 py-2 text-center">
+                    <div className="text-blue-600 font-bold text-lg">{rowData.length}</div>
+                    <div className="text-blue-600 font-medium text-xs">Total Leads</div>
+                  </div>
+                  {userStats && (
+                    <div className="bg-green-50 rounded-lg px-3 py-2 text-center">
+                      <div className="text-green-600 font-bold text-lg">
+                        {userStats.qualificationBreakdown?.find(q => q._id === "true")?.count || 0}
+                      </div>
+                      <div className="text-green-600 font-medium text-xs">Qualified</div>
+                    </div>
+                  )}
                 </div>
+                {userStats && (
+                  <div className="mt-2 text-xs text-gray-500">
+                    Quick Stats: {userStats.statusBreakdown?.map(s => `${s.count} ${s._id}`).join(', ')}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -319,11 +366,16 @@ export const Table = () => {
               {/* Table Header */}
               <div className="bg-blue-600 p-4 rounded-t-lg">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-white">Lead Pipeline</h2>
+                  <div className="flex items-center space-x-3">
+                    <h2 className="text-lg font-semibold text-white">My Lead Pipeline</h2>
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-500 text-white">
+                      Personal Workspace
+                    </span>
+                  </div>
                   <div className="flex items-center space-x-3">
                     <input
                       type="text"
-                      placeholder="Quick Filter..."
+                      placeholder="Search your leads..."
                       onChange={onQuickFilterChange}
                       className="px-3 py-1 rounded border bg-white/20 backdrop-blur-sm text-white placeholder-white/70 focus:outline-none focus:ring-1 focus:ring-white/50 text-sm"
                     />
@@ -380,7 +432,7 @@ export const Table = () => {
                 <h3 className="text-lg font-semibold text-white">
                   Add New Lead
                 </h3>
-                <p className="text-green-100 text-xs mt-1">Fill in the details below</p>
+                <p className="text-green-100 text-xs mt-1">Add to your personal dashboard</p>
               </div>
 
               {/* Form Content */}

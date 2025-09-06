@@ -2,9 +2,14 @@ const mongoose = require("mongoose");
 
 const LeadSchema = new mongoose.Schema(
   {
+    user: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: "User", 
+      required: true 
+    },
     first_name: { type: String, required: true },
     last_name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
+    email: { type: String, required: true },
     phone: { type: String },
     company: { type: String },
     city: { type: String },
@@ -18,5 +23,8 @@ const LeadSchema = new mongoose.Schema(
   },
   { timestamps: true } // automatically adds createdAt and updatedAt
 );
+
+// Create compound index for user + email to ensure unique emails per user
+LeadSchema.index({ user: 1, email: 1 }, { unique: true });
 
 module.exports = mongoose.model("Lead", LeadSchema);

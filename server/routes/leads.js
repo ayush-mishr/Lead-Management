@@ -5,7 +5,8 @@ const {
     getLeads,
     getLeadById,
     updateLead,
-    deleteLead
+    deleteLead,
+    getUserLeadStats
 } = require("../controllers/leadController");
 const { auth } = require("../middlewares/auth");
 
@@ -17,6 +18,7 @@ router.get("/test", (req, res) => {
 // Routes with authentication
 router.post("/", auth, createLead);        // Create lead
 router.get("/", auth, getLeads);          // Get all leads (with filters & pagination)
+router.get("/stats", auth, getUserLeadStats); // Get user's lead statistics
 router.get("/:id", auth, getLeadById);    // Get single lead by ID
 router.put("/:id", auth, updateLead);     // Update lead
 router.delete("/:id", auth, deleteLead);  // Delete lead
