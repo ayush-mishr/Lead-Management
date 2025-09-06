@@ -1,5 +1,5 @@
 import { toast } from "react-hot-toast"
-import { setSignupData, setLoading, setToken } from "../slices/auth"
+import { setSignupData,setLoading, setToken,} from "../slices/auth"
 import { setUser } from "../slices/profile"
 import { apiConnector } from "../operations/ApiConnector"
 import { endpoints } from "../operations/Api";
@@ -20,9 +20,10 @@ export function sendOtp(email, navigate) {
     dispatch(setLoading(true))
    
     try {
+   
       const response = await apiConnector("POST", SENDOTP_API, {
         email,
-        checkUserPresent: true, // This is to be used in case of signup
+        checkUserPresent:true, // This is to be used in case of signup
       })
       console.log("SENDOTP API RESPONSE............", response);
 
@@ -35,21 +36,15 @@ export function sendOtp(email, navigate) {
       }
 
       toast.success("OTP Sent Successfully")
-      
-      // Use setTimeout to ensure navigation happens after current render cycle
-      setTimeout(() => {
-        navigate("/verify-email");
-      }, 100);
-      
+      navigate("/verify-email");
     } catch (error) {
       // Log the error object for more details
       console.error("SENDOTP API ERROR............", error)
       
       toast.error(error?.message || "Could Not Send OTP")
-    } finally {
-      dispatch(setLoading(false))
-      toast.dismiss(toastId)
     }
+    dispatch(setLoading(false))
+    toast.dismiss(toastId)
   }
 }
 
@@ -63,10 +58,10 @@ export function signUp(
   otp,
   navigate
 ) {
+     
   return async (dispatch) => {
     const toastId = toast.loading("Loading...")
     dispatch(setLoading(true))
-    
     try {
       const response = await apiConnector("POST", SIGNUP_API, {
         firstName,
@@ -84,45 +79,31 @@ export function signUp(
         throw new Error(response.data.message)
       }
       
-      // Set user data and token after successful signup
-      if (response.data.token) {
-        dispatch(setToken(response.data.token));
-      }
-      
-      if (response.data.user) {
-        dispatch(setUser(response.data.user));
-      } else {
-        // If user data not in response, set from signup data
-        dispatch(setUser({
-          firstName,
-          lastName,
-          email,
-          accountType
-        }));
-      }
-      
-      // Clear signup data since registration is complete
-      dispatch(setSignupData(null));
-      
       toast.success("Signup Successful");
       
-      // Use setTimeout to ensure navigation happens after state updates
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 100);
+      // Set token and user data after successful signup
+      if (response.data.token) {
+        dispatch(setToken(response.data.token))
+        
+        if (response.data.user) {
+          const userImage = response.data?.user?.image
+            ? response.data.user.image
+            : `https://api.dicebear.com/5.x/initials/svg?seed=${response.data.user.firstName} ${response.data.user.lastName}`
+          dispatch(setUser({ ...response.data.user, image: userImage }))
+        }
+      }
       
+      navigate("/dashboard")
+      
+    
     } catch (error) {
       console.log("SIGNUP API ERROR............", error)
       toast.error("Signup Failed")
 
-      // Use setTimeout for error navigation too
-      setTimeout(() => {
-        navigate("/signup");
-      }, 100);
-    } finally {
-      dispatch(setLoading(false))
-      toast.dismiss(toastId)
+      navigate("/signup")
     }
+    dispatch(setLoading(false))
+    toast.dismiss(toastId)
   }
 }
 
@@ -131,7 +112,7 @@ export function login(email, password, navigate) {
     const toastId = toast.loading("Loading...")
     dispatch(setLoading(true))
     
-    console.log("emial hai bhai", email, password);
+    console.log("emial hai bhai",email, password);
     try {
       const response = await apiConnector("POST", LOGIN_API, {
         email,
@@ -151,23 +132,17 @@ export function login(email, password, navigate) {
         ? response.data.user.image
         : `https://api.dicebear.com/5.x/initials/svg?seed=${response.data.user.firstName} ${response.data.user.lastName}`
       dispatch(setUser({ ...response.data.user, image: userImage }))
-      
-      // Clear any existing signup data
-      dispatch(setSignupData(null));
-      
-      // Use setTimeout to ensure navigation happens after state updates
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 100);
-      
+          
+      console.log("dikkkat hai............");
+      navigate("/dashboard")
+    
     } catch (error) {
       console.log("LOGIN API ERROR............", error)
       toast.error("Login Failed")
          
-    } finally {
-      dispatch(setLoading(false))
-      toast.dismiss(toastId)
     }
+    dispatch(setLoading(false))
+    toast.dismiss(toastId)
   }
 }
 
@@ -230,7 +205,7 @@ export function logout(navigate) {
     dispatch(setToken(null))
     dispatch(setUser(null))
     
-    localStorage.removeItem("token")
+    // Remove user data (token is handled by auth slice)
     localStorage.removeItem("user")
     toast.success("Logged Out")
     navigate("/")

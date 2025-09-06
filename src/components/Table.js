@@ -8,7 +8,10 @@ import axios from "axios";
 import { useSelector } from 'react-redux';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
-export const Table = ({ onDataChange }) => {
+
+const API_BASE_URL = process.env.REACT_APP_BASE_URL || 'http://localhost:4000/api/v1';
+
+export const Table = () => {
   const { token } = useSelector((state) => state.auth);
   const [rowData, setRowData] = useState([]);
   const [selectedLead, setSelectedLead] = useState(null);
@@ -28,6 +31,19 @@ export const Table = ({ onDataChange }) => {
     is_qualified: "false", // Default string value
     last_activity: new Date().toISOString(),
   });
+
+  // Configure axios headers for authentication
+  const getAuthHeaders = () => {
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+    return {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "";
@@ -93,90 +109,43 @@ export const Table = ({ onDataChange }) => {
     floatingFilter: true,
   };
 
-  // Fetch Leads - Only user-specific data
+  // Fetch Leads with authentication
   const fetchLeads = async () => {
+    if (!token) {
+      console.warn('No authentication token available');
+      setRowData([]);
+      return;
+    }
+    
     try {
-      // For users without token, don't fetch any data
-      if (!token) {
-        setRowData([]);
-        if (onDataChange) {
-          onDataChange();
-        }
-        return;
-      }
-
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}` // Always require authentication
-        }
-      };
-      
-      const res = await axios.get("https://lead-management-2-wnen.onrender.com/api/v1/leads", config);
-      
-      // Only get user's own leads - the API should filter by user
+      const res = await axios.get(`${API_BASE_URL}/leads`, getAuthHeaders());
       const leads = res.data.data.map((lead) => ({
         ...lead,
         is_qualified: lead.is_qualified?.toString() || "false", // Always convert to string.
       }));
-      
       setRowData(leads);
-      
-      // Notify parent component about data change
-      if (onDataChange) {
-        onDataChange();
-      }
     } catch (err) {
-      console.error("Error fetching leads:", err);
-      
-      // For any error (including unauthorized), ensure empty data
-      setRowData([]);
-      
+      console.error('Error fetching leads:', err);
       if (err.response?.status === 401) {
-        console.error("Unauthorized access. User needs to login again.");
-      }
-      
-      // Still notify parent to update stats to 0
-      if (onDataChange) {
-        onDataChange();
+        alert('Authentication failed. Please login again.');
+        setRowData([]);
+      } else if (err.response?.status === 500) {
+        alert('Server error. Please try again later.');
+        setRowData([]);
+      } else {
+        alert('Failed to fetch leads. Please try again.');
+        setRowData([]);
       }
     }
   };
 
   useEffect(() => {
-    fetchLeads();
-  }, []);
+    if (token) {
+      fetchLeads();
+    }
+  }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Enhanced empty state component for new users
-  const EmptyState = () => (
-    <div className="flex flex-col items-center justify-center h-64 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border-2 border-dashed border-blue-200">
-      <div className="text-center">
-        <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 mb-4">
-          <svg className="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-        </div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">Your Personal Lead Management Starts Here!</h3>
-        <p className="text-gray-600 mb-1">Welcome to your private dashboard. This space is exclusively yours.</p>
-        <p className="text-sm text-gray-500 mb-6">Add your first lead below to start tracking and managing your business opportunities.</p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <button
-            onClick={() => document.getElementById('add-lead-form').scrollIntoView({ behavior: 'smooth' })}
-            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 shadow-lg hover:shadow-xl"
-          >
-            <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            Add Your First Lead
-          </button>
-          <div className="text-xs text-gray-400 self-center">
-            ✨ Start building your lead pipeline today
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  // Validation - Updated for user-specific emails
+  // Validation
   const validateLead = (lead, isNew = true) => {
     if (!lead.first_name || !lead.last_name || !lead.email) {
       alert("First name, last name, and email are required.");
@@ -190,43 +159,34 @@ export const Table = ({ onDataChange }) => {
       alert("Lead value cannot be negative.");
       return false;
     }
-    
-    // Check for duplicate email in current user's leads
     const duplicate = rowData.find(
       (r) => r.email === lead.email && (isNew || r._id !== lead._id)
     );
     if (duplicate) {
-      alert("You already have a lead with this email address.");
+      alert("Email must be unique.");
       return false;
     }
     return true;
   };
 
-  // Create Lead
+  // Create Lead with authentication
   const createLead = async () => {
+    if (!token) {
+      alert('Please login to add leads.');
+      return;
+    }
+    
     if (!validateLead(newLead)) return;
+    
     try {
-      const config = {
-        headers: {}
-      };
-      
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      
       const payload = {
         ...newLead,
         is_qualified: newLead.is_qualified.toString(),
         last_activity: new Date().toISOString(),
       };
-      await axios.post("https://lead-management-2-wnen.onrender.com/api/v1/leads", payload, config);
-      alert("Lead added successfully!");
+      await axios.post(`${API_BASE_URL}/leads`, payload, getAuthHeaders());
+      alert("Lead added!");
       fetchLeads();
-      
-      // Notify parent component
-      if (onDataChange) {
-        onDataChange();
-      }
       setNewLead({
         first_name: "",
         last_name: "",
@@ -243,77 +203,78 @@ export const Table = ({ onDataChange }) => {
         last_activity: new Date().toISOString(),
       });
     } catch (err) {
-      console.error("Error creating lead:", err);
-      const errorMessage = err.response?.data?.message || "Failed to add lead.";
-      alert(errorMessage);
+      console.error('Error creating lead:', err);
+      if (err.response?.status === 401) {
+        alert('Authentication failed. Please login again.');
+      } else if (err.response?.status === 500) {
+        alert('Server error. Please try again later.');
+      } else {
+        alert('Failed to add lead. Please try again.');
+      }
     }
   };
 
-  // Update Lead
+  // Update Lead with authentication
   const updateLead = async () => {
+    if (!token) {
+      alert('Please login to update leads.');
+      return;
+    }
+    
     if (!selectedLead) return alert("Select a lead to update!");
     if (!validateLead(selectedLead, false)) return;
+    
     try {
-      const config = {
-        headers: {}
-      };
-      
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      
       const payload = {
         ...selectedLead,
         is_qualified: selectedLead.is_qualified.toString(),
         last_activity: new Date().toISOString(),
       };
       await axios.put(
-        `https://lead-management-2-wnen.onrender.com/api/v1/leads/${selectedLead._id}`,
+        `${API_BASE_URL}/leads/${selectedLead._id}`,
         payload,
-        config
+        getAuthHeaders()
       );
-      alert("Lead updated successfully!");
+      alert("Lead updated!");
       fetchLeads();
-      
-      // Notify parent component
-      if (onDataChange) {
-        onDataChange();
-      }
     } catch (err) {
-      console.error("Error updating lead:", err);
-      const errorMessage = err.response?.data?.message || "Failed to update lead.";
-      alert(errorMessage);
+      console.error('Error updating lead:', err);
+      if (err.response?.status === 401) {
+        alert('Authentication failed. Please login again.');
+      } else if (err.response?.status === 500) {
+        alert('Server error. Please try again later.');
+      } else {
+        alert('Failed to update lead. Please try again.');
+      }
     }
   };
 
-  // Delete Lead
+  // Delete Lead with authentication
   const deleteLead = async () => {
+    if (!token) {
+      alert('Please login to delete leads.');
+      return;
+    }
+    
     if (!selectedLead) return alert("Select a lead to delete!");
     if (!window.confirm("Are you sure you want to delete this lead?")) return;
+    
     try {
-      const config = {
-        headers: {}
-      };
-      
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      
       await axios.delete(
-        `https://lead-management-2-wnen.onrender.com/api/v1/leads/${selectedLead._id}`,
-        config
+        `${API_BASE_URL}/leads/${selectedLead._id}`,
+        getAuthHeaders()
       );
-      alert("Lead deleted successfully!");
+      alert("Lead deleted!");
       fetchLeads();
-      
-      // Notify parent component
-      if (onDataChange) {
-        onDataChange();
-      }
     } catch (err) {
-      console.error("Error deleting lead:", err);
-      const errorMessage = err.response?.data?.message || "Failed to delete lead.";
-      alert(errorMessage);
+      console.error('Error deleting lead:', err);
+      if (err.response?.status === 401) {
+        alert('Authentication failed. Please login again.');
+      } else if (err.response?.status === 500) {
+        alert('Server error. Please try again later.');
+      } else {
+        alert('Failed to delete lead. Please try again.');
+      }
     }
   };
 
@@ -328,180 +289,258 @@ export const Table = ({ onDataChange }) => {
   };
 
   return (
-    <div className="flex gap-6 p-4">
-      {/* AG Grid Section */}
-      <div className="w-3/4">
-        <h2 className="text-2xl font-bold mb-3">Lead Management</h2>
-
-
-
-        {/* Search */}
-        <input
-          type="text"
-          placeholder="Search leads..."
-          onChange={onQuickFilterChange}
-          className="mb-4 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-        />
-
-        {/* Table or Empty State */}
-        {rowData.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <div className="ag-theme-quartz" style={{ height: 500, width: "100%" }}>
-            <AgGridReact
-              rowData={rowData}
-              columnDefs={columnDefs}
-              defaultColDef={defaultColDef}
-              pagination={true}
-              paginationPageSize={10}
-              paginationPageSizeSelector={[10, 25, 50, 100]}
-              rowSelection="multiple"
-              theme="legacy"
-              onSelectionChanged={(params) =>
-                setSelectedLead(params.api.getSelectedRows()[0])
-              }
-              onGridReady={onGridReady}
-            />
+    <div className="min-h-screen bg-gray-50 p-4">
+      <div className="max-w-full mx-auto">
+        {/* Compact Header Section */}
+        <div className="mb-4">
+          <div className="bg-white rounded-lg shadow-sm border p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-800 mb-1">
+                  📊 Lead Management Dashboard
+                </h1>
+                <p className="text-gray-600 text-sm">
+                  Manage and track your leads
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="bg-blue-50 rounded-lg px-3 py-2">
+                  <span className="text-blue-600 font-semibold text-sm">{rowData.length} Total Leads</span>
+                </div>
+              </div>
+            </div>
           </div>
-        )}
-
-        {/* Buttons */}
-        <div className="flex gap-4 mt-4">
-          <button
-            onClick={updateLead}
-            className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded"
-          >
-            Update Selected
-          </button>
-          <button
-            onClick={deleteLead}
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
-          >
-            Delete Selected
-          </button>
         </div>
-      </div>
 
-      {/* Add Lead Form */}
-      <div id="add-lead-form" className="w-1/4 bg-gray-100 shadow-md rounded-lg p-4">
-        <h3 className="text-lg font-semibold mb-3">Add New Lead</h3>
-        <div className="flex flex-col gap-3">
-          {[{ name: "first_name", label: "First Name" },
-            { name: "last_name", label: "Last Name" },
-            { name: "email", label: "Email" },
-            { name: "phone", label: "Phone" }].map((field) => (
-            <div key={field.name} className="flex flex-col">
-              <label className="text-sm font-semibold">{field.label}</label>
-              <input
-                type="text"
-                value={newLead[field.name]}
-                onChange={(e) => setNewLead({ ...newLead, [field.name]: e.target.value })}
-                className="border p-1 text-sm rounded"
-              />
-            </div>
-          ))}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-[calc(100vh-140px)]">
+          {/* Main Table Section - Takes 3/4 of width */}
+          <div className="lg:col-span-3">
+            <div className="bg-white rounded-lg shadow-sm border h-full flex flex-col">
+              {/* Table Header */}
+              <div className="bg-blue-600 p-4 rounded-t-lg">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-white">Lead Pipeline</h2>
+                  <div className="flex items-center space-x-3">
+                    <input
+                      type="text"
+                      placeholder="Quick Filter..."
+                      onChange={onQuickFilterChange}
+                      className="px-3 py-1 rounded border bg-white/20 backdrop-blur-sm text-white placeholder-white/70 focus:outline-none focus:ring-1 focus:ring-white/50 text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
 
-          {/* Two-Column Fields */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col">
-              <label className="text-sm font-semibold">Company</label>
-              <input
-                type="text"
-                value={newLead.company}
-                onChange={(e) => setNewLead({ ...newLead, company: e.target.value })}
-                className="border p-1 text-sm rounded"
-              />
-            </div>
-            <div className="flex flex-col">
-              <label className="text-sm font-semibold">City</label>
-              <input
-                type="text"
-                value={newLead.city}
-                onChange={(e) => setNewLead({ ...newLead, city: e.target.value })}
-                className="border p-1 text-sm rounded"
-              />
-            </div>
+              {/* AG Grid - Fills remaining space */}
+              <div className="flex-1 p-4">
+                <div className="ag-theme-quartz h-full w-full rounded overflow-hidden">
+                  <AgGridReact
+                    rowData={rowData}
+                    columnDefs={columnDefs}
+                    defaultColDef={defaultColDef}
+                    pagination={true}
+                    paginationPageSize={20}
+                    paginationPageSizeSelector={[10, 20, 50, 100]}
+                    rowSelection="multiple"
+                    theme="legacy"
+                    onSelectionChanged={(params) =>
+                      setSelectedLead(params.api.getSelectedRows()[0])
+                    }
+                    onGridReady={onGridReady}
+                    suppressRowClickSelection={false}
+                    rowMultiSelectWithClick={true}
+                    animateRows={true}
+                  />
+                </div>
 
-            <div className="flex flex-col">
-              <label className="text-sm font-semibold">State</label>
-              <input
-                type="text"
-                value={newLead.state}
-                onChange={(e) => setNewLead({ ...newLead, state: e.target.value })}
-                className="border p-1 text-sm rounded"
-              />
-            </div>
-            <div className="flex flex-col">
-              <label className="text-sm font-semibold">Score</label>
-              <input
-                type="number"
-                value={newLead.score}
-                onChange={(e) => setNewLead({ ...newLead, score: Number(e.target.value) })}
-                className="border p-1 text-sm rounded"
-              />
-            </div>
-
-            <div className="flex flex-col">
-              <label className="text-sm font-semibold">Lead Value</label>
-              <input
-                type="number"
-                value={newLead.lead_value}
-                onChange={(e) => setNewLead({ ...newLead, lead_value: Number(e.target.value) })}
-                className="border p-1 text-sm rounded"
-              />
-            </div>
-            <div className="flex flex-col">
-              <label className="text-sm font-semibold">Source</label>
-              <select
-                value={newLead.source}
-                onChange={(e) => setNewLead({ ...newLead, source: e.target.value })}
-                className="border p-1 text-sm rounded"
-              >
-                <option value="website">Website</option>
-                <option value="facebook_ads">Facebook Ads</option>
-                <option value="google_ads">Google Ads</option>
-                <option value="referral">Referral</option>
-                <option value="events">Events</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-
-            <div className="flex flex-col">
-              <label className="text-sm font-semibold">Status</label>
-              <select
-                value={newLead.status}
-                onChange={(e) => setNewLead({ ...newLead, status: e.target.value })}
-                className="border p-1 text-sm rounded"
-              >
-                <option value="new">New</option>
-                <option value="contacted">Contacted</option>
-                <option value="qualified">Qualified</option>
-                <option value="lost">Lost</option>
-                <option value="won">Won</option>
-              </select>
-            </div>
-
-            <div className="flex flex-col">
-              <label className="text-sm font-semibold">Is Qualified</label>
-              <select
-                value={newLead.is_qualified}
-                onChange={(e) =>
-                  setNewLead({ ...newLead, is_qualified: e.target.value })
-                }
-                className="border p-1 text-sm rounded"
-              >
-                <option value="true">True</option>
-                <option value="false">False</option>
-              </select>
+                {/* Action Buttons */}
+                <div className="flex justify-center space-x-3 mt-4">
+                  <button
+                    onClick={updateLead}
+                    className="px-6 py-2 bg-yellow-500 text-white font-medium rounded-lg hover:bg-yellow-600 transition-colors duration-200"
+                  >
+                    Update Selected
+                  </button>
+                  <button
+                    onClick={deleteLead}
+                    className="px-6 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors duration-200"
+                  >
+                    Delete Selected
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
-          <button
-            onClick={createLead}
-            className="bg-green-600 hover:bg-green-700 text-white p-2 mt-3 rounded"
-          >
-            Add Lead
-          </button>
+          {/* Add Lead Form - Takes 1/4 of width */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-lg shadow-sm border h-full flex flex-col">
+              {/* Form Header */}
+              <div className="bg-green-600 p-4 rounded-t-lg">
+                <h3 className="text-lg font-semibold text-white">
+                  Add New Lead
+                </h3>
+                <p className="text-green-100 text-xs mt-1">Fill in the details below</p>
+              </div>
+
+              {/* Form Content */}
+              <div className="flex-1 p-4 overflow-y-auto">
+                <div className="space-y-3">
+                  {/* Primary Fields */}
+                  {[
+                    { name: "first_name", label: "First Name", type: "text" },
+                    { name: "last_name", label: "Last Name", type: "text" },
+                    { name: "email", label: "Email", type: "email" },
+                    { name: "phone", label: "Phone", type: "tel" }
+                  ].map((field) => (
+                    <div key={field.name}>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        {field.label}
+                      </label>
+                      <input
+                        type={field.type}
+                        value={newLead[field.name]}
+                        onChange={(e) => setNewLead({ ...newLead, [field.name]: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        placeholder={`Enter ${field.label.toLowerCase()}`}
+                      />
+                    </div>
+                  ))}
+
+                  {/* Company and Source */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Company
+                      </label>
+                      <input
+                        type="text"
+                        value={newLead.company}
+                        onChange={(e) => setNewLead({ ...newLead, company: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        placeholder="Company"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Source
+                      </label>
+                      <select
+                        value={newLead.source}
+                        onChange={(e) => setNewLead({ ...newLead, source: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      >
+                        <option value="website">Website</option>
+                        <option value="social_media">Social Media</option>
+                        <option value="referral">Referral</option>
+                        <option value="email">Email</option>
+                        <option value="phone">Phone</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* City and State */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        City
+                      </label>
+                      <input
+                        type="text"
+                        value={newLead.city}
+                        onChange={(e) => setNewLead({ ...newLead, city: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        placeholder="City"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        State
+                      </label>
+                      <input
+                        type="text"
+                        value={newLead.state}
+                        onChange={(e) => setNewLead({ ...newLead, state: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        placeholder="State"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Score and Lead Value */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Score (0-100)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={newLead.score}
+                        onChange={(e) => setNewLead({ ...newLead, score: parseInt(e.target.value) || 0 })}
+                        className="w-full px-3 py-2 border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Lead Value ($)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={newLead.lead_value}
+                        onChange={(e) => setNewLead({ ...newLead, lead_value: parseFloat(e.target.value) || 0 })}
+                        className="w-full px-3 py-2 border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Status and Is Qualified */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Status
+                      </label>
+                      <select
+                        value={newLead.status}
+                        onChange={(e) => setNewLead({ ...newLead, status: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      >
+                        <option value="new">New</option>
+                        <option value="contacted">Contacted</option>
+                        <option value="qualified">Qualified</option>
+                        <option value="lost">Lost</option>
+                        <option value="won">Won</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Is Qualified
+                      </label>
+                      <select
+                        value={newLead.is_qualified}
+                        onChange={(e) => setNewLead({ ...newLead, is_qualified: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      >
+                        <option value="true">Yes - Qualified</option>
+                        <option value="false">No - Not Qualified</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  onClick={createLead}
+                  className="w-full mt-4 bg-green-600 text-white py-2 rounded-lg font-medium hover:bg-green-700 transition-colors duration-200"
+                >
+                  Add Lead
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

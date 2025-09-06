@@ -3,6 +3,8 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+const API_BASE_URL = process.env.REACT_APP_BASE_URL || 'http://localhost:4000/api/v1';
+
 export default function PasswordReset() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,7 +37,7 @@ export default function PasswordReset() {
     try {
       console.log("print toooooo ho gaya bhai before..........",email)  
       const res = await axios.post(
-        "https://lead-management-2-wnen.onrender.com/api/v1/auth/reset-password",
+        `${API_BASE_URL}/auth/reset-password`,
         { email, password, confirmPassword }
       );
      console.log("print toooooo ho gaya bhai.after.........",email)  

@@ -8,6 +8,8 @@ import { useEffect } from 'react';
 import axios from 'axios';
 import toast from "react-hot-toast";
 
+const API_BASE_URL = process.env.REACT_APP_BASE_URL || 'http://localhost:4000/api/v1';
+
 
 
 export const VerifyLogin = () => {
@@ -25,7 +27,7 @@ export const VerifyLogin = () => {
      const toastId = toast.loading("Verifiying otp");
       try{
        const email =  localStorage.getItem("userEmail");  
-     const res = await axios.post("https://lead-management-2-wnen.onrender.com/api/v1/auth/verify-otp-forsign",{email,otp});
+     const res = await axios.post(`${API_BASE_URL}/auth/verify-otp-forsign`,{email,otp});
      toast.dismiss(toastId);
      
      if(res.data.success){

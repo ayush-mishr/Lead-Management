@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react"
+import { useState } from "react"
 import { toast } from "react-hot-toast"
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai"
 import { useDispatch } from "react-redux"
@@ -32,15 +32,15 @@ function SignupForm() {
   const { firstName, lastName, email, password, confirmPassword } = formData
 
   // Handle input fields, when some value changes
-  const handleOnChange = useCallback((e) => {
+  const handleOnChange = (e) => {
     setFormData((prevData) => ({
       ...prevData,
       [e.target.name]: e.target.value,
     }))
-  }, [])
+  }
 
   // Handle Form Submission
-  const handleOnSubmit = useCallback((e) => {
+  const handleOnSubmit = (e) => {
     e.preventDefault()
 
     if (password !== confirmPassword) {
@@ -70,19 +70,10 @@ function SignupForm() {
     
     })
     setAccountType(ACCOUNT_TYPE.USER)
-  }, [formData, accountType, password, confirmPassword, dispatch, navigate])
-
-  // Memoize password visibility toggles
-  const togglePassword = useCallback(() => {
-    setShowPassword((prev) => !prev)
-  }, [])
-
-  const toggleConfirmPassword = useCallback(() => {
-    setShowConfirmPassword((prev) => !prev)
-  }, [])
+  }
 
   // data to pass to Tab component
-  const tabData = useMemo(() => [
+  const tabData = [
     {
       id: 1,
       tabName: "User",
@@ -93,7 +84,7 @@ function SignupForm() {
       tabName: "Admin",
       type: ACCOUNT_TYPE.ADMIN,
     },
-  ], [])
+  ]
 
   return (
     <div>
@@ -160,7 +151,7 @@ function SignupForm() {
               className="form-style w-full h-[40px] bg-slate-600 rounded-md"
             />
             <span
-              onClick={togglePassword}
+              onClick={() => setShowPassword((prev) => !prev)}
               className="absolute right-3 top-[38px] z-[10] cursor-pointer"
             >
               {showPassword ? (
@@ -184,7 +175,7 @@ function SignupForm() {
               className="form-style w-full h-[40px] bg-slate-600 rounded-md"
             />
             <span
-              onClick={toggleConfirmPassword}
+              onClick={() => setShowConfirmPassword((prev) => !prev)}
               className="absolute right-3 top-[38px] z-[10] cursor-pointer"
             >
               {showConfirmPassword ? (

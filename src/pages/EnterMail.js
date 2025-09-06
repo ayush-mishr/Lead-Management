@@ -5,6 +5,8 @@ import { useDispatch } from "react-redux";
 import axios from "axios";
 import toast from "react-hot-toast";
 
+const API_BASE_URL = process.env.REACT_APP_BASE_URL || 'http://localhost:4000/api/v1';
+
 
 export default function EmailInput() {
   const [email, setEmail] = useState("");
@@ -31,7 +33,7 @@ export default function EmailInput() {
 
   try {
     const response = await axios.post(
-    "https://lead-management-2-wnen.onrender.com/api/v1/auth/otp-login", { email },{timeout: 8000 });
+    `${API_BASE_URL}/auth/otp-login`, { email },{timeout: 8000 });
      toast.dismiss(toastId);
     if (response.data.success) {
       toast.success("Email found! Sending OTP...");

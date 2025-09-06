@@ -145,26 +145,9 @@ exports.signUp = async (req, res) => {
       image: "Ld.jpg", 
     });
 
-    // Create JWT token for the newly registered user
-    const payload = {
-      email: user.email,
-      id: user._id,
-      accountType: user.accountType,
-    };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
-    user.token = token;
-    user.password = undefined;
-
-    // Cookie setting
-    const options = {
-      expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
-      httpOnly: true,
-    };
-
-    return res.cookie('token', token, options).status(200).json({
+    return res.status(200).json({
       success: true,
       user,
-      token,
       message: "User registered successfully",
     })
   } catch (error) {

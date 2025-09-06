@@ -6,13 +6,13 @@ const User = require('../models/User');
 exports.auth = async(req, res, next) => {
     try{
         //extract token 
-        let token = req.cookies.token || req.body.token;
-        
-        // Handle Authorization header more safely
         const authHeader = req.header('Authorization');
-        if (authHeader && authHeader.startsWith('Bearer ')) {
-            token = authHeader.replace('Bearer ', '');
-        }
+        const cookieToken = req.cookies ? req.cookies.token : null;
+        const bodyToken = req.body ? req.body.token : null;
+        const token = cookieToken || bodyToken || (authHeader && authHeader.startsWith('Bearer ') ? authHeader.replace('Bearer ', '') : null);
+        
+        console.log('Auth Debug - Headers:', req.headers.authorization);
+        console.log('Auth Debug - Token extracted:', token ? 'Token found' : 'No token');
         
         if(!token){
             return res.status(401).json({
@@ -20,14 +20,14 @@ exports.auth = async(req, res, next) => {
                 message:"Token not found, authorization denied",
             });
         }
+        
         //verify token
         try{
             const decode = jwt.verify(token, process.env.JWT_SECRET);
-            
-            // Set the user information from the decoded token
-            req.user = decode;
-            
+            console.log('Decoded token:', decode);
+            req.user = decode; // Set the user data in request
         }catch(err){
+            console.error('Token verification error:', err);
             return res.status(401).json({
                 success:false,
                 message:"Token is not valid",

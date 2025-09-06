@@ -1,8 +1,18 @@
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import './Chatbot.css';
 
-// Move system prompt outside component to prevent recreation
-const SYSTEM_PROMPT = `You are a helpful AI assistant for this Lead Management website. Your primary role is to assist visitors with information about our website, services, and general inquiries.
+const Chatbot = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState([
+    { role: 'bot', content: 'Hello! How can I help you with our website today?', timestamp: new Date() }
+  ]);
+  const [inputValue, setInputValue] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  const OPENROUTER_API_KEY = process.env.REACT_APP_OPENROUTER_API_KEY;
+
+  const systemPrompt = `You are a helpful AI assistant for this Lead Management website. Your primary role is to assist visitors with information about our website, services, and general inquiries.
 
 **WEBSITE KNOWLEDGE BASE:**
 - **About**: This is a Lead Management System that helps businesses track, manage, and convert leads effectively
@@ -50,17 +60,7 @@ You can explore these features by signing up and accessing the **Dashboard** sec
 
 Remember: Be conversational, helpful, and always guide users to relevant website sections when applicable. Focus on lead management and business productivity benefits.`;
 
-const Chatbot = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([
-    { role: 'bot', content: 'Hello! How can I help you with our website today?', timestamp: new Date() }
-  ]);
-  const [inputValue, setInputValue] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef(null);
-
-  const OPENROUTER_API_KEY = process.env.REACT_APP_OPENROUTER_API_KEY;
-  const sendMessage = useCallback(async (message) => {
+  const sendMessage = async (message) => {
     if (!message.trim() || isLoading) return;
 
     const userMessage = { 
@@ -84,7 +84,7 @@ const Chatbot = () => {
         body: JSON.stringify({
           model: 'deepseek/deepseek-chat',
           messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'system', content: systemPrompt },
             ...messages.slice(-10).map(msg => ({
               role: msg.role === 'bot' ? 'assistant' : 'user',
               content: msg.content
@@ -119,21 +119,21 @@ const Chatbot = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, messages, OPENROUTER_API_KEY]);
+  };
 
-  const clearChat = useCallback(() => {
+  const clearChat = () => {
     setMessages([{ 
       role: 'bot', 
       content: 'Hello! How can I help you with our website today?', 
       timestamp: new Date() 
     }]);
-  }, []);
+  };
 
-  const formatTime = useCallback((timestamp) => {
+  const formatTime = (timestamp) => {
     return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  }, []);
+  };
 
-  const formatMessageContent = useCallback((content) => {
+  const formatMessageContent = (content) => {
     // Split content by double line breaks for paragraphs
     const paragraphs = content.split('\n\n');
     
@@ -191,41 +191,7 @@ const Chatbot = () => {
         </div>
       );
     });
-  }, []);
-
-  const toggleChat = useCallback(() => {
-    setIsOpen(prev => !prev);
-  }, []);
-
-  const closeChat = useCallback(() => {
-    setIsOpen(false);
-  }, []);
-
-  const handleKeyDown = useCallback((e) => {
-    if (e.key === 'Enter') {
-      toggleChat();
-    }
-  }, [toggleChat]);
-
-  const handleSubmit = useCallback((e) => {
-    e.preventDefault();
-    sendMessage(inputValue);
-  }, [inputValue, sendMessage]);
-
-  const handleInputChange = useCallback((e) => {
-    setInputValue(e.target.value);
-  }, []);
-
-  const handleKeyPress = useCallback((e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage(inputValue);
-    }
-  }, [inputValue, sendMessage]);
-
-  const handleSendClick = useCallback(() => {
-    sendMessage(inputValue);
-  }, [inputValue, sendMessage]);
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -236,11 +202,11 @@ const Chatbot = () => {
       {/* Chat Toggle Button */}
       <div 
         className={`chatbot-toggle ${isOpen ? 'active' : ''}`}
-        onClick={toggleChat}
+        onClick={() => setIsOpen(!isOpen)}
         title={isOpen ? 'Close chat' : 'Open chat'}
         role="button"
         tabIndex={0}
-        onKeyDown={handleKeyDown}
+        onKeyDown={(e) => e.key === 'Enter' && setIsOpen(!isOpen)}
         aria-label={isOpen ? 'Close chat' : 'Open chat'}
       >
         {isOpen ? '✕' : '💬'}
@@ -263,7 +229,7 @@ const Chatbot = () => {
               🗑️
             </button>
             <button 
-              onClick={closeChat} 
+              onClick={() => setIsOpen(false)} 
               title="Close" 
               className="close-btn"
               aria-label="Close chat"
@@ -303,15 +269,15 @@ const Chatbot = () => {
           <input
             type="text"
             value={inputValue}
-            onChange={handleInputChange}
-            onKeyPress={handleKeyPress}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage(inputValue)}
             placeholder="Ask about our lead management system..."
             disabled={isLoading}
             maxLength={500}
             aria-label="Type your message"
           />
           <button 
-            onClick={handleSendClick}
+            onClick={() => sendMessage(inputValue)}
             disabled={isLoading || !inputValue.trim()}
             className="send-btn"
             aria-label="Send message"

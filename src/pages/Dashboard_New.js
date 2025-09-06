@@ -26,7 +26,7 @@ export const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
-      <div className="w-full">
+      <div className="max-w-full mx-auto">
         <Table />
       </div>
     </div>
