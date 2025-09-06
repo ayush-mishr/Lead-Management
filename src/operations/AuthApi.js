@@ -23,7 +23,7 @@ export function sendOtp(email, navigate) {
    
       const response = await apiConnector("POST", SENDOTP_API, {
         email,
-        checkUserPresent:true, // This is to be used in case of signup
+        checkUserPresent: true, // This is to be used in case of signup
       })
       console.log("SENDOTP API RESPONSE............", response);
 
@@ -40,8 +40,18 @@ export function sendOtp(email, navigate) {
     } catch (error) {
       // Log the error object for more details
       console.error("SENDOTP API ERROR............", error)
+      console.error("Error Response:", error.response)
       
-      toast.error(error?.message || "Could Not Send OTP")
+      // Handle specific error cases
+      if (error.response?.status === 401) {
+        toast.error("Email already registered. Please try logging in instead.");
+      } else if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else if (error.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Could Not Send OTP. Please try again.");
+      }
     }
     dispatch(setLoading(false))
     toast.dismiss(toastId)

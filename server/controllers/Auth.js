@@ -11,46 +11,64 @@ require('dotenv').config();
 exports.sendOTP = async (req, res) => {
   
   try {
-    const { email } = req.body
+    const { email, checkUserPresent } = req.body
+    console.log("SendOTP called with:", { email, checkUserPresent });
+
+    // Validate email
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required',
+      })
+    }
 
     // Check if user is already present
-    // Find user with provided email
-    const checkUserPresent = await User.findOne({ email })
-    // to be used in case of signup
-
-    // If user found with provided email
-    if (checkUserPresent) {
-      // Return 401 Unauthorized status code with error message
+    const checkUserExists = await User.findOne({ email })
+    console.log("User exists check:", !!checkUserExists);
+    
+    // If checkUserPresent is true (for signup), don't allow existing users
+    if (checkUserPresent && checkUserExists) {
+      console.log("Rejecting OTP request - user already exists and checkUserPresent is true");
       return res.status(401).json({
         success: false,
         message: `User is Already Registered`,
       })
     }
+    
+    // If checkUserPresent is false (for password reset, etc), allow existing users
+    // If checkUserPresent is undefined, default behavior is to allow (for backward compatibility)
 
     var otp = otpGenerator.generate(6, {
       upperCaseAlphabets: false,
       lowerCaseAlphabets: false,
       specialChars: false,
     })
-    const result = await OTP.findOne({ otp: otp })
+    
+    // Make sure OTP is unique
+    let result = await OTP.findOne({ otp: otp })
     console.log("Result is Generate OTP Func")
     console.log("OTP", otp)
     console.log("Result", result)
     while (result) {
       otp = otpGenerator.generate(6, {
         upperCaseAlphabets: false,
+        lowerCaseAlphabets: false,
+        specialChars: false,
       })
+      result = await OTP.findOne({ otp: otp })
     }
+    
     const otpPayload = { email, otp }
     const otpBody = await OTP.create(otpPayload)
     console.log("OTP Body", otpBody)
+    
     res.status(200).json({
       success: true,
       message: `OTP Sent Successfully`,
       otp,
     })
   } catch (error) {
-    console.log(error.message)
+    console.log("SendOTP Error:", error.message)
     return res.status(500).json({ success: false, error: error.message })
   }
 }
