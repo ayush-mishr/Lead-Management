@@ -63,6 +63,16 @@ Remember: Be conversational, helpful, and always guide users to relevant website
   const sendMessage = async (message) => {
     if (!message.trim() || isLoading) return;
 
+    // Check if API key is available
+    if (!OPENROUTER_API_KEY || OPENROUTER_API_KEY === 'undefined') {
+      setMessages(prev => [...prev, {
+        role: 'bot',
+        content: 'Sorry, the chatbot service is currently unavailable. Please contact our support team for assistance.',
+        timestamp: new Date()
+      }]);
+      return;
+    }
+
     const userMessage = { 
       role: 'user', 
       content: message, 
@@ -98,7 +108,10 @@ Remember: Be conversational, helpful, and always guide users to relevant website
       });
 
       if (!response.ok) {
-        throw new Error(`API Error: ${response.status}`);
+        if (response.status === 401) {
+          throw new Error('Authentication failed - API key invalid or missing');
+        }
+        throw new Error(`API Error: ${response.status} - ${response.statusText}`);
       }
 
       const data = await response.json();

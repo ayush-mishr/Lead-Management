@@ -120,6 +120,16 @@ export const Table = () => {
       setUserStats(res.data.data);
     } catch (err) {
       console.error('Error fetching user stats:', err);
+      if (err.response?.status === 500) {
+        console.error('Server error details:', err.response.data);
+      }
+      // Set default stats if fetch fails
+      setUserStats({
+        totalLeads: 0,
+        statusBreakdown: [],
+        sourceBreakdown: [],
+        qualificationBreakdown: []
+      });
     }
   };
 

@@ -150,27 +150,31 @@ exports.deleteLead = async (req, res) => {
 exports.getUserLeadStats = async (req, res) => {
   try {
     const userId = req.user.id;
+    console.log("Getting stats for user:", userId);
     
     // Get total leads for user
     const totalLeads = await Lead.countDocuments({ user: userId });
+    console.log("Total leads found:", totalLeads);
     
-    // Get leads by status
+    // Get leads by status - Fixed ObjectId conversion
     const statusStats = await Lead.aggregate([
-      { $match: { user: mongoose.Types.ObjectId(userId) } },
+      { $match: { user: new mongoose.Types.ObjectId(userId) } },
       { $group: { _id: "$status", count: { $sum: 1 } } }
     ]);
     
-    // Get leads by source
+    // Get leads by source - Fixed ObjectId conversion
     const sourceStats = await Lead.aggregate([
-      { $match: { user: mongoose.Types.ObjectId(userId) } },
+      { $match: { user: new mongoose.Types.ObjectId(userId) } },
       { $group: { _id: "$source", count: { $sum: 1 } } }
     ]);
     
-    // Get qualified vs unqualified
+    // Get qualified vs unqualified - Fixed ObjectId conversion
     const qualificationStats = await Lead.aggregate([
-      { $match: { user: mongoose.Types.ObjectId(userId) } },
+      { $match: { user: new mongoose.Types.ObjectId(userId) } },
       { $group: { _id: "$is_qualified", count: { $sum: 1 } } }
     ]);
+    
+    console.log("Stats computed successfully");
     
     res.status(200).json({
       success: true,
@@ -182,6 +186,7 @@ exports.getUserLeadStats = async (req, res) => {
       }
     });
   } catch (error) {
+    console.error("Error in getUserLeadStats:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
