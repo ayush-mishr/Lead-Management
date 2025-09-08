@@ -12,12 +12,6 @@ const Chatbot = () => {
 
   const OPENROUTER_API_KEY = process.env.REACT_APP_OPENROUTER_API_KEY;
   const CHATBOT_ENABLED = process.env.REACT_APP_CHATBOT_ENABLED !== 'false'; // Enable by default
-  
-  // Debug logging for environment variables
-  console.log('Environment:', process.env.NODE_ENV);
-  console.log('API Key exists:', !!OPENROUTER_API_KEY);
-  console.log('API Key length:', OPENROUTER_API_KEY ? OPENROUTER_API_KEY.length : 0);
-  console.log('Chatbot enabled:', CHATBOT_ENABLED);
 
   const systemPrompt = `You are a helpful AI assistant for this Lead Management website. Your primary role is to assist visitors with information about our website, services, and general inquiries.
 
@@ -92,8 +86,6 @@ Remember: Be conversational, helpful, and always guide users to relevant website
     setIsLoading(true);
 
     try {
-      console.log('Making API call with key:', OPENROUTER_API_KEY.substring(0, 10) + '...');
-      
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -103,7 +95,7 @@ Remember: Be conversational, helpful, and always guide users to relevant website
           'X-Title': 'Lead Management Chatbot'
         },
         body: JSON.stringify({
-          model: 'deepseek/deepseek-chat',
+          model: 'openai/gpt-3.5-turbo', // Changed to a more common model
           messages: [
             { role: 'system', content: systemPrompt },
             ...messages.slice(-10).map(msg => ({
@@ -119,8 +111,19 @@ Remember: Be conversational, helpful, and always guide users to relevant website
       });
 
       if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('API Error Details:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
+        });
+        
         if (response.status === 401) {
-          throw new Error('Authentication failed - API key invalid or missing');
+          throw new Error('Authentication failed - Please check your OpenRouter account and API key permissions');
+        } else if (response.status === 402) {
+          throw new Error('Insufficient credits - Please add credits to your OpenRouter account');
+        } else if (response.status === 429) {
+          throw new Error('Rate limit exceeded - Please wait a moment and try again');
         }
         throw new Error(`API Error: ${response.status} - ${response.statusText}`);
       }
@@ -135,9 +138,21 @@ Remember: Be conversational, helpful, and always guide users to relevant website
       setMessages(prev => [...prev, botResponse]);
     } catch (error) {
       console.error('Chatbot error:', error);
+      
+      // Provide more helpful fallback responses based on the error
+      let fallbackMessage;
+      
+      if (error.message.includes('Authentication failed')) {
+        fallbackMessage = 'I apologize, but the chatbot service is temporarily unavailable due to authentication issues. However, I can help you with some common questions:\n\n• **Getting Started**: Click "Sign Up" to create an account and access the dashboard\n• **Lead Management**: Use the dashboard to add, edit, and track your leads\n• **Support**: Contact our team through the website contact forms\n\nIs there anything specific about our lead management features you\'d like to know?';
+      } else if (error.message.includes('credits')) {
+        fallbackMessage = 'The chatbot service has reached its usage limit, but I can still help! Our Lead Management system offers:\n\n• **Lead Tracking**: Monitor and organize all your leads\n• **Dashboard Analytics**: View lead statistics and performance\n• **User Management**: Secure login and personal workspaces\n\nPlease explore the website or contact support for more detailed assistance.';
+      } else {
+        fallbackMessage = 'I\'m experiencing some technical difficulties, but I can still provide basic information about our Lead Management system:\n\n• **Sign up** to get started with lead tracking\n• **Dashboard** provides analytics and lead management\n• **Secure** user authentication and data protection\n\nFor detailed help, please explore our website sections or contact support.';
+      }
+      
       setMessages(prev => [...prev, {
         role: 'bot',
-        content: 'Sorry, I encountered an error. Please try again or contact our support team.',
+        content: fallbackMessage,
         timestamp: new Date()
       }]);
     } finally {
