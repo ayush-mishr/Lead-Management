@@ -11,6 +11,13 @@ const Chatbot = () => {
   const messagesEndRef = useRef(null);
 
   const OPENROUTER_API_KEY = process.env.REACT_APP_OPENROUTER_API_KEY;
+  const CHATBOT_ENABLED = process.env.REACT_APP_CHATBOT_ENABLED !== 'false'; // Enable by default
+  
+  // Debug logging for environment variables
+  console.log('Environment:', process.env.NODE_ENV);
+  console.log('API Key exists:', !!OPENROUTER_API_KEY);
+  console.log('API Key length:', OPENROUTER_API_KEY ? OPENROUTER_API_KEY.length : 0);
+  console.log('Chatbot enabled:', CHATBOT_ENABLED);
 
   const systemPrompt = `You are a helpful AI assistant for this Lead Management website. Your primary role is to assist visitors with information about our website, services, and general inquiries.
 
@@ -64,12 +71,14 @@ Remember: Be conversational, helpful, and always guide users to relevant website
     if (!message.trim() || isLoading) return;
 
     // Check if API key is available
-    if (!OPENROUTER_API_KEY || OPENROUTER_API_KEY === 'undefined') {
+    if (!OPENROUTER_API_KEY || OPENROUTER_API_KEY === 'undefined' || OPENROUTER_API_KEY.trim() === '') {
+      console.error('OpenRouter API key is missing or invalid');
       setMessages(prev => [...prev, {
         role: 'bot',
-        content: 'Sorry, the chatbot service is currently unavailable. Please contact our support team for assistance.',
+        content: 'Sorry, the chatbot service is currently unavailable due to configuration issues. Please contact our support team for assistance.',
         timestamp: new Date()
       }]);
+      setIsLoading(false);
       return;
     }
 
@@ -83,6 +92,8 @@ Remember: Be conversational, helpful, and always guide users to relevant website
     setIsLoading(true);
 
     try {
+      console.log('Making API call with key:', OPENROUTER_API_KEY.substring(0, 10) + '...');
+      
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -209,6 +220,11 @@ Remember: Be conversational, helpful, and always guide users to relevant website
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Don't render chatbot if disabled
+  if (!CHATBOT_ENABLED) {
+    return null;
+  }
 
   return (
     <>
