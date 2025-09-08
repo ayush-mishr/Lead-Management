@@ -68,7 +68,7 @@ export default function HomePage() {
         <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-16">
           <div className="text-center mb-20">
             <div className="inline-block bg-white/20 backdrop-blur-lg rounded-full px-6 py-3 mb-6">
-              <span className="text-white font-semibold">🚀 Powerful Features</span>
+              <span className="text-white font-semibold">Powerful Features</span>
             </div>
             <h2 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
               Why Choose Our <span className="text-yellow-300">Platform</span>?
@@ -81,42 +81,36 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
-                icon: "🤖",
                 title: "AI-Powered Analytics",
                 description: "Advanced machine learning algorithms analyze your leads and predict conversion probabilities with 95% accuracy.",
                 gradient: "from-pink-500 to-rose-500",
                 bgColor: "bg-pink-500/10"
               },
               {
-                icon: "⚡",
                 title: "Lightning Automation",
                 description: "Automate repetitive tasks and focus on what matters most - building relationships and closing deals.",
                 gradient: "from-yellow-400 to-orange-500",
                 bgColor: "bg-yellow-400/10"
               },
               {
-                icon: "🎯",
                 title: "Smart Lead Scoring",
                 description: "Our intelligent scoring system prioritizes your hottest prospects automatically for maximum conversion.",
                 gradient: "from-green-400 to-emerald-500",
                 bgColor: "bg-green-400/10"
               },
               {
-                icon: "📱",
                 title: "Mobile Excellence",
                 description: "Native mobile apps that work seamlessly across all devices with offline sync capabilities.",
                 gradient: "from-blue-500 to-cyan-500",
                 bgColor: "bg-blue-500/10"
               },
               {
-                icon: "🔒",
                 title: "Enterprise Security",
                 description: "Bank-level encryption, SOC 2 compliance, and 99.99% uptime guarantee for your peace of mind.",
                 gradient: "from-purple-500 to-violet-500",
                 bgColor: "bg-purple-500/10"
               },
               {
-                icon: "🌐",
                 title: "Global Integration",
                 description: "Connect with 1000+ tools including CRM, email platforms, and marketing automation systems.",
                 gradient: "from-indigo-500 to-blue-600",
@@ -131,19 +125,12 @@ export default function HomePage() {
                 <div className={`absolute -inset-1 bg-gradient-to-r ${feature.gradient} rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-500`}></div>
                 
                 <div className="relative">
-                  <div className={`inline-flex p-4 rounded-2xl bg-gradient-to-r ${feature.gradient} mb-6 text-4xl shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                    {feature.icon}
-                  </div>
-                  
                   <h3 className="text-2xl font-bold text-white mb-4 group-hover:text-yellow-300 transition-colors duration-300">
                     {feature.title}
                   </h3>
                   <p className="text-blue-100 leading-relaxed group-hover:text-white transition-colors duration-300">
                     {feature.description}
                   </p>
-                  
-                  {/* Animated bottom accent */}
-                  <div className={`absolute bottom-0 left-0 w-full h-2 bg-gradient-to-r ${feature.gradient} transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 rounded-b-3xl`}></div>
                 </div>
               </div>
             ))}
